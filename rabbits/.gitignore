@@ -1,1 +1,3 @@
 *.DS_Store
+*.synctex.gz
+*.pdf
