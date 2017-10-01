@@ -6,6 +6,7 @@ import uchicago.src.sim.space.Object2DGrid;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 
 /**
@@ -46,10 +47,21 @@ public class RabbitsGrassSimulationAgent implements Drawable {
     private void setVxVy() {
         vX = 0;
         vY = 0;
-        while ((vX == 0) && (vY == 0)) {
-            vX = (int) Math.floor(Math.random() * 3) - 1;
-            vY = (int) Math.floor(Math.random() * 3) - 1;
-        }
+
+        ArrayList<int[]> l = new ArrayList();
+
+        l.add(new int[]{-1, 0});
+        l.add(new int[]{+1, 0});
+        l.add(new int[]{0, -1});
+        l.add(new int[]{0, +1});
+
+        Random randomizer = new Random();
+        int[] random = l.get(randomizer.nextInt(l.size()));
+
+        vX = random[0];
+        vY = random[1];
+
+
     }
 
 
@@ -86,6 +98,11 @@ public class RabbitsGrassSimulationAgent implements Drawable {
         } else {
             arg0.drawFastRoundRect(Color.GRAY);
         }
+
+        if (ID == 1) {
+            arg0.drawFastRoundRect(Color.RED);
+        }
+
     }
 
     public int getX() {
@@ -107,7 +124,6 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 
         if (tryMove(newX, newY)) {
             energy += rgsSpace.eatGrassAt(x, y);
-
         }
 
         setVxVy();
@@ -120,17 +136,9 @@ public class RabbitsGrassSimulationAgent implements Drawable {
         return rgsSpace.moveAgentAt(x, y, newX, newY);
     }
 
-    public ArrayList<int[]> tryGivingBirth() {
+    public boolean tryGivingBirth() {
 
-        ArrayList n = rgsSpace.getEmptyNeighbours(x, y);
-
-        if (energy <= birthCost || n.size() < 1) {
-            return new ArrayList<>();
-        }
-
-        energy -= birthCost;
-        return rgsSpace.getEmptyNeighbours(x, y);
-
+        return energy > birthCost;
 
     }
 

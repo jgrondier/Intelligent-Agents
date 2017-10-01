@@ -12,7 +12,6 @@ import uchicago.src.sim.util.SimUtilities;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * Class that implements the simulation model for the rabbits grass
@@ -32,7 +31,6 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
     private static final int NUMRABBITS = 20;
     private static final int BIRTHCOST = 5;
     private static final int GRASSGROWTHRATE = 10;
-    private static final int STARTINGENERGY = 10;
     private static final int GRASSENERGY = 4;
 
 
@@ -41,7 +39,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
     private static int numRabbits = NUMRABBITS;
     private static int birthCost = BIRTHCOST;
     private static int grassGrowthRate = GRASSGROWTHRATE;
-    private static int startingEnergy = STARTINGENERGY;
+    private static int startingEnergy = BIRTHCOST;
     private static int grassEnergy = GRASSENERGY;
 
     private static Schedule schedule;
@@ -116,15 +114,6 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
                     rgsa.step();
 
-                    ArrayList<int[]> l = rgsa.tryGivingBirth();
-
-                    if (l.size() > 0) {
-
-                        Random random = new Random();
-                        int[] a = l.get(random.nextInt(l.size()));
-                        addNewAgent(a[0], a[1]);
-                    }
-
                 }
 
                 reapDeadRabbits();
@@ -143,6 +132,22 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         }
 
         schedule.scheduleActionAtInterval(10, new RabbitGrassCountLiving());
+
+        class RabbitGrassGiveBirth extends BasicAction {
+            public void execute() {
+                for (int i = 0; i < agentList.size(); i++) {
+                    RabbitsGrassSimulationAgent rgsa = agentList.get(i);
+
+                    if (rgsa.tryGivingBirth()) {
+                        addNewAgent();
+                    }
+
+                }
+            }
+        }
+
+
+        schedule.scheduleActionBeginning(0, new RabbitGrassGiveBirth());
 
 
     }
@@ -182,14 +187,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
     private void addNewAgent() {
         RabbitsGrassSimulationAgent a = new RabbitsGrassSimulationAgent(birthCost, startingEnergy);
-        agentList.add(a);
-        rgsSpace.addAgent(a);
+        if (rgsSpace.addAgent(a)) {
+            agentList.add(a);
+        }
+        ;
     }
 
-    private void addNewAgent(int x, int y) {
-        RabbitsGrassSimulationAgent a = new RabbitsGrassSimulationAgent(x, y, birthCost, startingEnergy);
-        agentList.add(a);
-    }
 
     private int reapDeadRabbits() {
 

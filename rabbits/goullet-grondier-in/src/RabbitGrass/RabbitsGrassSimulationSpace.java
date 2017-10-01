@@ -8,8 +8,6 @@ package RabbitGrass;
 
 import uchicago.src.sim.space.Object2DGrid;
 
-import java.util.ArrayList;
-
 public class RabbitsGrassSimulationSpace {
 
     private Object2DGrid grassSpace;
@@ -73,16 +71,6 @@ public class RabbitsGrassSimulationSpace {
         return retVal;
     }
 
-    public boolean addAgent(int x, int y, RabbitsGrassSimulationAgent agent) {
-
-        if (isCellOccupied(x, y)) {
-            return false;
-        }
-
-        agentSpace.putObjectAt(x, y, agent);
-        return true;
-
-    }
 
     public boolean hasCellGrass(int x, int y) {
 
@@ -130,40 +118,6 @@ public class RabbitsGrassSimulationSpace {
             retVal = true;
         }
         return retVal;
-    }
-
-    public ArrayList<int[]> getEmptyNeighbours(int x, int y) {
-
-        int xSize = agentSpace.getSizeX();
-        int ySize = agentSpace.getSizeY();
-
-        ArrayList<int[]> integers = new ArrayList<>();
-
-        int[] t = new int[2];
-
-        if (agentSpace.getObjectAt(Math.floorMod(x - 1, xSize), Math.floorMod(y - 1, ySize)) == null) {
-            t = new int[]{x - 1, y - 1};
-            integers.add(t);
-        }
-
-        if (agentSpace.getObjectAt(Math.floorMod(x + 1, xSize), Math.floorMod(y - 1, ySize)) == null) {
-            t = new int[]{x + 1, y - 1};
-            integers.add(t);
-        }
-
-        if (agentSpace.getObjectAt(Math.floorMod(x - 1, xSize), Math.floorMod(y + 1, ySize)) == null) {
-            t = new int[]{x - 1, y + 1};
-            integers.add(t);
-        }
-
-        if (agentSpace.getObjectAt(Math.floorMod(x + 1, xSize), Math.floorMod(y + 1, ySize)) == null) {
-            t = new int[]{x + 1, y + 1};
-            integers.add(t);
-        }
-
-        return integers;
-
-
     }
 
 
