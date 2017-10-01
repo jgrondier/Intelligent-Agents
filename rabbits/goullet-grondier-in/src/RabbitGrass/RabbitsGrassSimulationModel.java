@@ -39,7 +39,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
     private static int numRabbits = NUMRABBITS;
     private static int birthCost = BIRTHCOST;
     private static int grassGrowthRate = GRASSGROWTHRATE;
-    private static int startingEnergy = BIRTHCOST;
+    private static int startingEnergy = BIRTHCOST - 1;
     private static int grassEnergy = GRASSENERGY;
 
     private static Schedule schedule;
@@ -52,25 +52,21 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
 
     public static void main(String[] args) {
-
-        System.out.println("Rabbit skeleton");
-
+    	System.out.println("Welcome to the Rabbit-Grass Simulation!");
         SimInit init = new SimInit();
         RabbitsGrassSimulationModel model = new RabbitsGrassSimulationModel();
         init.loadModel(model, "", false);
-
     }
 
     public void setup() {
         System.out.println("Running setup");
         rgsSpace = null;
-        agentList = new ArrayList();
+        agentList = new ArrayList<RabbitsGrassSimulationAgent>();
         schedule = new Schedule(1);
 
         if (displaySurf != null) {
             displaySurf.dispose();
         }
-        displaySurf = null;
         displaySurf = new DisplaySurface(this, "Rabbits Grass Simulation Model Window 1");
         registerDisplaySurface("Rabbits Grass Simulation Model Window 1", displaySurf);
 
@@ -114,6 +110,9 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
                     rgsa.step();
 
+                    if (rgsa.tryGiveBirth()) {
+                        addNewAgent();
+                    }
                 }
 
                 reapDeadRabbits();
@@ -132,22 +131,6 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         }
 
         schedule.scheduleActionAtInterval(10, new RabbitGrassCountLiving());
-
-        class RabbitGrassGiveBirth extends BasicAction {
-            public void execute() {
-                for (int i = 0; i < agentList.size(); i++) {
-                    RabbitsGrassSimulationAgent rgsa = agentList.get(i);
-
-                    if (rgsa.tryGivingBirth()) {
-                        addNewAgent();
-                    }
-
-                }
-            }
-        }
-
-
-        schedule.scheduleActionBeginning(0, new RabbitGrassGiveBirth());
 
 
     }
@@ -173,7 +156,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
     }
 
     public String[] getInitParam() {
-        String[] initParams = {"WorldXSize", "WorldYSize", "NumRabbits", "BirthCost", "StartingEnergy", "GrassGrowthRate", "GrassEnergy"};
+        String[] initParams = {"WorldXSize", "WorldYSize", "NumRabbits", "BirthCost", "StartingEnergy", "GrassGrowthRate", "GrassEnergy", "StartingEnergy"};
         return initParams;
     }
 
@@ -190,12 +173,10 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         if (rgsSpace.addAgent(a)) {
             agentList.add(a);
         }
-        ;
     }
 
 
     private int reapDeadRabbits() {
-
         int count = 0;
         for (int i = (agentList.size() - 1); i >= 0; i--) {
             RabbitsGrassSimulationAgent rgsa = agentList.get(i);
@@ -206,8 +187,6 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
             }
         }
         return count;
-
-
     }
 
     private int countLivingAgents() {

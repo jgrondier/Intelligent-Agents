@@ -47,9 +47,7 @@ public class RabbitsGrassSimulationSpace {
     }
 
     public boolean isCellOccupied(int x, int y) {
-        boolean retVal = false;
-        if (agentSpace.getObjectAt(x, y) != null) retVal = true;
-        return retVal;
+        return (agentSpace.getObjectAt(x, y) != null);
     }
 
     public boolean addAgent(RabbitsGrassSimulationAgent agent) {
@@ -71,26 +69,20 @@ public class RabbitsGrassSimulationSpace {
         return retVal;
     }
 
-
-    public boolean hasCellGrass(int x, int y) {
-
-        return ((Integer) grassSpace.getObjectAt(x, y)).intValue() == (new Integer(1)).intValue();
-
-    }
-
     public void regrowGrass() {
 
 
         int countLimit = 10 * agentSpace.getSizeX() * agentSpace.getSizeY();
 
 
-        for (int count = 0, regrownGrass = 0; count < countLimit && regrownGrass < grassGrowthRate; count++, regrownGrass++) {
+        for (int count = 0, regrownGrass = 0; count < countLimit && regrownGrass < grassGrowthRate; count++) {
 
             int x = (int) (Math.random() * (agentSpace.getSizeX()));
             int y = (int) (Math.random() * (agentSpace.getSizeY()));
 
-            if (!hasCellGrass(x, y)) {
+            if (getGrassAt(x, y) == 0) {
                 grassSpace.putObjectAt(x, y, new Integer(1));
+                regrownGrass++;
             }
 
         }
@@ -103,18 +95,18 @@ public class RabbitsGrassSimulationSpace {
     }
 
     public int eatGrassAt(int x, int y) {
-        int grass = getGrassAt(x, y) * grassEnergy;
+        int energy = getGrassAt(x, y) * grassEnergy;
         grassSpace.putObjectAt(x, y, new Integer(0));
-        return grass;
+        return energy;
     }
 
     public boolean moveAgentAt(int x, int y, int newX, int newY) {
         boolean retVal = false;
         if (!isCellOccupied(newX, newY)) {
-            RabbitsGrassSimulationAgent cda = (RabbitsGrassSimulationAgent) agentSpace.getObjectAt(x, y);
+            RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent) agentSpace.getObjectAt(x, y);
             removeAgentAt(x, y);
-            cda.setXY(newX, newY);
-            agentSpace.putObjectAt(newX, newY, cda);
+            rgsa.setXY(newX, newY);
+            agentSpace.putObjectAt(newX, newY, rgsa);
             retVal = true;
         }
         return retVal;
