@@ -1,6 +1,3 @@
-
-import RabbitGrass.RabbitsGrassSimulationModel;
-
 public class MainRabbit {
 
     public static void main(String[] args){

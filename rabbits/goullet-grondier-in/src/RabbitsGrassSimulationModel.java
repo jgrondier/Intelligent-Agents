@@ -1,4 +1,4 @@
-package RabbitGrass;
+
 
 import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.Schedule;

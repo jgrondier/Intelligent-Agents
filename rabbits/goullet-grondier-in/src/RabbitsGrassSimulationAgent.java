@@ -1,4 +1,4 @@
-package RabbitGrass;
+
 
 import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
