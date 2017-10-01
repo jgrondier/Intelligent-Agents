@@ -1,5 +1,8 @@
 
 
+import uchicago.src.sim.analysis.DataSource;
+import uchicago.src.sim.analysis.OpenSequenceGraph;
+import uchicago.src.sim.analysis.Sequence;
 import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
@@ -8,6 +11,7 @@ import uchicago.src.sim.gui.ColorMap;
 import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.gui.Value2DDisplay;
+import uchicago.src.sim.space.Object2DGrid;
 import uchicago.src.sim.util.SimUtilities;
 
 import java.awt.*;
@@ -49,7 +53,38 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
     private DisplaySurface displaySurf;
 
     private ArrayList<RabbitsGrassSimulationAgent> agentList;
+    
+	private OpenSequenceGraph amountOfRabbitsAlive;
 
+	class RabbitsAlive implements DataSource, Sequence {
+
+		public Object execute() {
+			return new Double(getSValue());
+		}
+
+		public double getSValue() {
+			return (double) countLivingAgents();
+		}
+	}
+	
+	class GrassPresent implements DataSource, Sequence {
+
+		public Object execute() {
+			return new Double(getSValue());
+		}
+
+		public double getSValue() {
+			int grass = 0;
+			Object2DGrid grassSpace = rgsSpace.getCurrentGrassSpace();
+			for (int i = 0; i < grassSpace.getSizeX(); i++) {
+				for (int j = 0; j < grassSpace.getSizeY(); j++) {
+					if (rgsSpace.getGrassAt(i, j) > 0)
+						grass++;
+				}
+			}
+			return grass;
+		}
+	}
 
     public static void main(String[] args) {
     	System.out.println("Welcome to the Rabbit-Grass Simulation!");
@@ -69,7 +104,9 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         }
         displaySurf = new DisplaySurface(this, "Rabbits Grass Simulation Model Window 1");
         registerDisplaySurface("Rabbits Grass Simulation Model Window 1", displaySurf);
-
+        
+        amountOfRabbitsAlive = new OpenSequenceGraph("Amount of Rabbits Alive", this);
+		this.registerMediaProducer("Plot", amountOfRabbitsAlive);
     }
 
 
@@ -78,6 +115,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         buildSchedule();
         buildDisplay();
 
+        amountOfRabbitsAlive.display();
         displaySurf.display();
     }
 
@@ -126,7 +164,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
         class RabbitGrassCountLiving extends BasicAction {
             public void execute() {
-                System.out.println("Number of living rabbits is: " + countLivingAgents());
+                amountOfRabbitsAlive.step();
             }
         }
 
@@ -151,7 +189,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         displayAgents.setObjectList(agentList);
 
         displaySurf.addDisplayableProbeable(displayAgents, "Agents");
-
+		amountOfRabbitsAlive.addSequence("Rabbits Alive", new RabbitsAlive());
+		amountOfRabbitsAlive.addSequence("Grass Squares", new GrassPresent());
 
     }
 
