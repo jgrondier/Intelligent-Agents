@@ -6,7 +6,16 @@
  * @author
  */
 
+import uchicago.src.sim.gui.SimGraphics;
 import uchicago.src.sim.space.Object2DGrid;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class RabbitsGrassSimulationSpace {
 
@@ -14,15 +23,26 @@ public class RabbitsGrassSimulationSpace {
     private Object2DGrid agentSpace;
     private int grassEnergy;
     private int grassGrowthRate;
+    private Random random = new Random();
+
+    private static BufferedImage ogImage = null;
+
 
     public RabbitsGrassSimulationSpace(int xSize, int ySize, int grassEnergy, int grassGrowthRate) {
+
+        try {
+            ogImage = ImageIO.read(new File("./src/rabbit_logo.png"));
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
+
         grassSpace = new Object2DGrid(xSize, ySize);
         agentSpace = new Object2DGrid(xSize, ySize);
         this.grassEnergy = grassEnergy;
         this.grassGrowthRate = grassGrowthRate;
         for (int i = 0; i < xSize; i++) {
             for (int j = 0; j < ySize; j++) {
-                grassSpace.putObjectAt(i, j, new Integer(1));
+                grassSpace.putObjectAt(i, j, new Integer(0));
             }
         }
     }
@@ -51,39 +71,59 @@ public class RabbitsGrassSimulationSpace {
     }
 
     public boolean addAgent(RabbitsGrassSimulationAgent agent) {
-        int count = 0;
-        int countLimit = 10 * agentSpace.getSizeX() * agentSpace.getSizeY();
 
-        while (count < countLimit) {
-            int x = (int) (Math.random() * (agentSpace.getSizeX()));
-            int y = (int) (Math.random() * (agentSpace.getSizeY()));
-            if (isCellOccupied(x, y) == false) {
-                agentSpace.putObjectAt(x, y, agent);
-                agent.setXY(x, y);
-                agent.setRabbitGrassSimulationSpace(this);
-                return true;
+        ArrayList<int[]> noRabbitsCells = new ArrayList<>();
+
+        for (int i = 0; i < agentSpace.getSizeX(); i++) {
+            for (int j = 0; j < agentSpace.getSizeY(); j++) {
+                if (!isCellOccupied(i, j)) {
+                    noRabbitsCells.add(new int[]{i, j});
+                }
             }
-            count++;
         }
-        return false;
+
+        if (noRabbitsCells.isEmpty()) {
+            return false;
+        }
+
+        int index = random.nextInt(noRabbitsCells.size());
+
+        int[] xy = noRabbitsCells.get(index);
+
+        int i = xy[0];
+        int j = xy[1];
+
+        agentSpace.putObjectAt(i, j, agent);
+
+        agentSpace.putObjectAt(i, j, agent);
+        agent.setXY(i, j);
+        agent.setRabbitGrassSimulationSpace(this);
+
+        return true;
+
     }
 
     public void regrowGrass() {
 
 
-        int countLimit = 10 * grassSpace.getSizeX() * grassSpace.getSizeY();
+        ArrayList<int[]> noGrassCells = new ArrayList<>();
 
-
-        for (int count = 0, regrownGrass = 0; count < countLimit && regrownGrass < grassGrowthRate; count++) {
-
-            int x = (int) (Math.random() * (grassSpace.getSizeX()));
-            int y = (int) (Math.random() * (grassSpace.getSizeY()));
-
-            if (getGrassAt(x, y) == 0) {
-                grassSpace.putObjectAt(x, y, new Integer(1));
-                regrownGrass++;
+        for (int i = 0; i < grassSpace.getSizeX(); i++) {
+            for (int j = 0; j < grassSpace.getSizeY(); j++) {
+                if (getGrassAt(i, j) == 0) {
+                    noGrassCells.add(new int[]{i, j});
+                }
             }
+        }
 
+
+        for (int toGrow = grassGrowthRate; toGrow > 0 && !noGrassCells.isEmpty(); toGrow--) {
+            int index = random.nextInt(noGrassCells.size());
+            int[] xy = noGrassCells.get(index);
+
+            grassSpace.putObjectAt(xy[0], xy[1], new Integer(1));
+
+            noGrassCells.remove(index);
         }
 
 
@@ -109,6 +149,12 @@ public class RabbitsGrassSimulationSpace {
             retVal = true;
         }
         return retVal;
+    }
+
+    public BufferedImage getImage() {
+
+        return ogImage;
+
     }
 
 

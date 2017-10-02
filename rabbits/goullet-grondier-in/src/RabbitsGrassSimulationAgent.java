@@ -1,10 +1,15 @@
 
 
+import net.coobird.thumbnailator.Thumbnails;
 import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
 import uchicago.src.sim.space.Object2DGrid;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -16,111 +21,116 @@ import java.util.Random;
 
 public class RabbitsGrassSimulationAgent implements Drawable {
 
-	private int x;
-	private int y;
-	private int vX;
-	private int vY;
-	private static int birthCost;
-	private int energy;
-	private static int IDNumber = 0;
-	private int ID;
-	private RabbitsGrassSimulationSpace rgsSpace;
+    private int x;
+    private int y;
+    private int vX;
+    private int vY;
+    private static int birthCost;
+    private int energy;
+    private static int IDNumber = 0;
+    private int ID;
+    private RabbitsGrassSimulationSpace rgsSpace;
 
-	public RabbitsGrassSimulationAgent(int birthCost, int startingEnergy) {
-		RabbitsGrassSimulationAgent.birthCost = birthCost;
-		this.energy = startingEnergy;
-		IDNumber++;
-		ID = IDNumber;
-		setVxVy();
-	}
+    public RabbitsGrassSimulationAgent(int birthCost, int startingEnergy) {
+        RabbitsGrassSimulationAgent.birthCost = birthCost;
+        this.energy = startingEnergy;
+        IDNumber++;
+        ID = IDNumber;
+        setVxVy();
+    }
 
-	private void setVxVy() {
-		ArrayList<int[]> l = new ArrayList<int[]>();
+    private void setVxVy() {
+        ArrayList<int[]> l = new ArrayList<int[]>();
 
-		l.add(new int[] { -1, 0 });
-		l.add(new int[] { +1, 0 });
-		l.add(new int[] { 0, -1 });
-		l.add(new int[] { 0, +1 });
+        l.add(new int[]{-1, 0});
+        l.add(new int[]{+1, 0});
+        l.add(new int[]{0, -1});
+        l.add(new int[]{0, +1});
 
-		Random randomizer = new Random();
-		int[] random = l.get(randomizer.nextInt(l.size()));
+        Random randomizer = new Random();
+        int[] random = l.get(randomizer.nextInt(l.size()));
 
-		vX = random[0];
-		vY = random[1];
+        vX = random[0];
+        vY = random[1];
 
-	}
+    }
 
-	public void setRabbitGrassSimulationSpace(RabbitsGrassSimulationSpace a) {
-		rgsSpace = a;
-	}
+    public void setRabbitGrassSimulationSpace(RabbitsGrassSimulationSpace a) {
+        rgsSpace = a;
+    }
 
-	public void setXY(int newX, int newY) {
-		x = newX;
-		y = newY;
-	}
+    public void setXY(int newX, int newY) {
+        x = newX;
+        y = newY;
+    }
 
-	public String getID() {
-		return "Rabbit-" + ID;
-	}
+    public String getID() {
+        return "Rabbit-" + ID;
+    }
 
-	public int getEnergy() {
-		return energy;
-	}
+    public int getEnergy() {
+        return energy;
+    }
 
-	public void report() {
+    public void report() {
 
-		System.out.println(getID() + " at " + x + ", " + y + " has " + getEnergy() + " energy ");
+        System.out.println(getID() + " at " + x + ", " + y + " has " + getEnergy() + " energy ");
 
-	}
+    }
 
-	public void draw(SimGraphics arg0) {
-		if (canGiveBirth()) {
-			arg0.drawFastRoundRect(Color.WHITE);
-		} else {
-			arg0.drawFastRoundRect(Color.GRAY);
-		}
-	}
+    public void draw(SimGraphics arg0) {
 
-	public int getX() {
-		return x;
-	}
+        Image img = rgsSpace.getImage();
 
-	public int getY() {
-		return y;
-	}
+        if (img != null) {
+            arg0.drawImageToFit(rgsSpace.getImage());
+        } else {
+            arg0.drawFastRoundRect(Color.WHITE);
+        }
 
-	public void step() {
 
-		int newX = x + vX;
-		int newY = y + vY;
+    }
 
-		Object2DGrid grid = rgsSpace.getCurrentAgentSpace();
-		newX = (newX + grid.getSizeX()) % grid.getSizeX();
-		newY = (newY + grid.getSizeY()) % grid.getSizeY();
+    public int getX() {
+        return x;
+    }
 
-		if (tryMove(newX, newY)) {
-			energy += rgsSpace.eatGrassAt(x, y);
-		}
+    public int getY() {
+        return y;
+    }
 
-		setVxVy();
+    public void step() {
 
-		energy--;
-	}
+        int newX = x + vX;
+        int newY = y + vY;
 
-	private boolean tryMove(int newX, int newY) {
-		return rgsSpace.moveAgentAt(x, y, newX, newY);
-	}
+        Object2DGrid grid = rgsSpace.getCurrentAgentSpace();
+        newX = (newX + grid.getSizeX()) % grid.getSizeX();
+        newY = (newY + grid.getSizeY()) % grid.getSizeY();
 
-	public boolean canGiveBirth() {
-		return energy > birthCost;
-	}
+        if (tryMove(newX, newY)) {
+            energy += rgsSpace.eatGrassAt(x, y);
+        }
 
-	public boolean tryGiveBirth() {
-		if (canGiveBirth()) {
-			energy -= birthCost;
-			return true;
-		}
-		return false;
-	}
+        setVxVy();
+
+        energy--;
+    }
+
+    private boolean tryMove(int newX, int newY) {
+        return rgsSpace.moveAgentAt(x, y, newX, newY);
+    }
+
+    public boolean canGiveBirth() {
+        return energy > birthCost;
+    }
+
+    public boolean tryGiveBirth() {
+        if (canGiveBirth()) {
+            energy -= birthCost;
+            return true;
+        }
+        return false;
+    }
 
 }

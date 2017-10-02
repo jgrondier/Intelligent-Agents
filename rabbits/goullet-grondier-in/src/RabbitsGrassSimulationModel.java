@@ -1,5 +1,6 @@
 
 
+import uchicago.src.reflector.RangePropertyDescriptor;
 import uchicago.src.sim.analysis.DataSource;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.analysis.Sequence;
@@ -53,41 +54,41 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
     private DisplaySurface displaySurf;
 
     private ArrayList<RabbitsGrassSimulationAgent> agentList;
-    
-	private OpenSequenceGraph amountOfRabbitsAlive;
 
-	class RabbitsAlive implements DataSource, Sequence {
+    private OpenSequenceGraph amountOfRabbitsAlive;
 
-		public Object execute() {
-			return new Double(getSValue());
-		}
+    class RabbitsAlive implements DataSource, Sequence {
 
-		public double getSValue() {
-			return (double) countLivingAgents();
-		}
-	}
-	
-	class GrassPresent implements DataSource, Sequence {
+        public Object execute() {
+            return new Double(getSValue());
+        }
 
-		public Object execute() {
-			return new Double(getSValue());
-		}
+        public double getSValue() {
+            return (double) countLivingAgents();
+        }
+    }
 
-		public double getSValue() {
-			int grass = 0;
-			Object2DGrid grassSpace = rgsSpace.getCurrentGrassSpace();
-			for (int i = 0; i < grassSpace.getSizeX(); i++) {
-				for (int j = 0; j < grassSpace.getSizeY(); j++) {
-					if (rgsSpace.getGrassAt(i, j) > 0)
-						grass++;
-				}
-			}
-			return grass;
-		}
-	}
+    class GrassPresent implements DataSource, Sequence {
+
+        public Object execute() {
+            return new Double(getSValue());
+        }
+
+        public double getSValue() {
+            int grass = 0;
+            Object2DGrid grassSpace = rgsSpace.getCurrentGrassSpace();
+            for (int i = 0; i < grassSpace.getSizeX(); i++) {
+                for (int j = 0; j < grassSpace.getSizeY(); j++) {
+                    if (rgsSpace.getGrassAt(i, j) > 0)
+                        grass++;
+                }
+            }
+            return grass;
+        }
+    }
 
     public static void main(String[] args) {
-    	System.out.println("Welcome to the Rabbit-Grass Simulation!");
+        System.out.println("Welcome to the Rabbit-Grass Simulation!");
         SimInit init = new SimInit();
         RabbitsGrassSimulationModel model = new RabbitsGrassSimulationModel();
         init.loadModel(model, "", false);
@@ -104,9 +105,18 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         }
         displaySurf = new DisplaySurface(this, "Rabbits Grass Simulation Model Window 1");
         registerDisplaySurface("Rabbits Grass Simulation Model Window 1", displaySurf);
-        
+
         amountOfRabbitsAlive = new OpenSequenceGraph("Amount of Rabbits Alive", this);
-		this.registerMediaProducer("Plot", amountOfRabbitsAlive);
+        this.registerMediaProducer("Plot", amountOfRabbitsAlive);
+
+        descriptors.put("WorldXSize", new RangePropertyDescriptor("WorldXSize", 1, 200, 199));
+        descriptors.put("WorldYSize", new RangePropertyDescriptor("WorldYSize", 1, 200, 199));
+        descriptors.put("NumRabbits", new RangePropertyDescriptor("NumRabbits", 0, 1000, 250));
+        descriptors.put("BirthCost", new RangePropertyDescriptor("BirthCost", 1, 100, 99));
+        descriptors.put("GrassGrowthRate", new RangePropertyDescriptor("GrassGrowthRate", 1, 10000, 9999));
+        descriptors.put("StartingEnergy", new RangePropertyDescriptor("StartingEnergy", 1, 100, 99));
+        descriptors.put("GrassEnergy", new RangePropertyDescriptor("GrassEnergy", 1, 100, 99));
+
     }
 
 
@@ -189,8 +199,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         displayAgents.setObjectList(agentList);
 
         displaySurf.addDisplayableProbeable(displayAgents, "Agents");
-		amountOfRabbitsAlive.addSequence("Rabbits Alive", new RabbitsAlive());
-		amountOfRabbitsAlive.addSequence("Grass Squares", new GrassPresent());
+        amountOfRabbitsAlive.addSequence("Rabbits Alive", new RabbitsAlive());
+        amountOfRabbitsAlive.addSequence("Grass Squares", new GrassPresent());
 
     }
 
