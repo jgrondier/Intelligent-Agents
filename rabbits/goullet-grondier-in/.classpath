@@ -9,6 +9,10 @@
 	<classpathentry kind="lib" path="E:/Dropbox/cours/IA/intelagent_jars/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="E:/Dropbox/cours/IA/intelagent_jars/logist.jar"/>
 	<classpathentry kind="lib" path="E:/Dropbox/cours/IA/intelagent_jars/plot.jar"/>
-	<classpathentry kind="lib" path="E:/Dropbox/cours/IA/intelagent_jars/repast.jar"/>
+	<classpathentry kind="lib" path="E:/Dropbox/cours/IA/intelagent_jars/repast.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/E:/Dropbox/cours/IA/repast_javadoc.zip!/api"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
