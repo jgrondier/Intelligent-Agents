@@ -6,15 +6,14 @@
  * @author
  */
 
+import uchicago.src.sim.space.Object2DGrid;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
-
-import javax.imageio.ImageIO;
-
-import uchicago.src.sim.space.Object2DGrid;
 
 public class RabbitsGrassSimulationSpace {
 
@@ -30,7 +29,7 @@ public class RabbitsGrassSimulationSpace {
     public RabbitsGrassSimulationSpace(int xSize, int ySize, int grassEnergy, int grassGrowthRate) {
 
         try {
-            ogImage = ImageIO.read(new File("./src/rabbit_logo.png"));
+            ogImage = ImageIO.read(new File("rabbit_logo.png"));
         } catch (IOException e) {
             //e.printStackTrace();
         }
