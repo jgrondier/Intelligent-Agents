@@ -94,7 +94,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         init.loadModel(model, "", false);
     }
 
-    public void setup() {
+    @SuppressWarnings("unchecked")
+	public void setup() {
         System.out.println("Running setup");
         rgsSpace = null;
         agentList = new ArrayList<RabbitsGrassSimulationAgent>();

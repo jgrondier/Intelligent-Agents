@@ -6,16 +6,15 @@
  * @author
  */
 
-import uchicago.src.sim.gui.SimGraphics;
-import uchicago.src.sim.space.Object2DGrid;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
+
+import javax.imageio.ImageIO;
+
+import uchicago.src.sim.space.Object2DGrid;
 
 public class RabbitsGrassSimulationSpace {
 

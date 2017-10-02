@@ -1,17 +1,11 @@
+import java.awt.Color;
+import java.awt.Image;
+import java.util.ArrayList;
+import java.util.Random;
 
-
-import net.coobird.thumbnailator.Thumbnails;
 import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
 import uchicago.src.sim.space.Object2DGrid;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * Class that implements the simulation agent for the rabbits grass simulation.
