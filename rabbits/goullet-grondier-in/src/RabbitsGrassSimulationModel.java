@@ -15,6 +15,7 @@ import uchicago.src.sim.gui.Value2DDisplay;
 import uchicago.src.sim.space.Object2DGrid;
 import uchicago.src.sim.util.SimUtilities;
 
+
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -95,7 +96,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
     }
 
     @SuppressWarnings("unchecked")
-	public void setup() {
+    public void setup() {
         System.out.println("Running setup");
         rgsSpace = null;
         agentList = new ArrayList<RabbitsGrassSimulationAgent>();
@@ -180,6 +181,9 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
         }
 
         schedule.scheduleActionAtInterval(10, new RabbitGrassCountLiving());
+
+
+        schedule.scheduleActionAt(0, new RabbitGrassCountLiving());
 
 
     }
