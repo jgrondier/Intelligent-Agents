@@ -50,8 +50,8 @@ When a rabbit wants to move (i.e. every step), it chooses a random cardinal dire
 
 
 \section{Results}
-% In this section, you study and describe how different variables (e.g. birth threshold, grass growth rate etc.) or combinations of variables influence the results. Different experiments with diffrent settings are described below with your observations and analysis
-We ran simulations with differents values changed. Some results were rather evident (e.g. setting _grassGrowthRate_ or _grassEnergy_ to very low values means most, if not all, rabbits will die from hunger; or having a too large world size compared to the _grassGrowthRate_ means the rabbits will not find the grass and die of hunger, since their random movement means finding grass is pure luck).
+% In this section, you study and describe how different variables (e.g. birth threshold, grass growth rate etc.) or combinations of variables influence the results. Different experiments with different settings are described below with your observations and analysis
+We ran simulations with different values changed. Some results were rather evident (e.g. setting _grassGrowthRate_ or _grassEnergy_ to very low values means most, if not all, rabbits will die from hunger; or having a too large world size compared to the _grassGrowthRate_ means the rabbits will not find the grass and die of hunger, since their random movement means finding grass is pure luck).
 
 See Figure \ref{fig:default} for a typical simulation run with the default parameters.
 
@@ -68,17 +68,15 @@ We tried changing the number of initial rabbits in the simulation, to see if tha
 
 \subsubsection{Observations}
 
-As shown in Figure \ref{fig:exp-1}, after the first 50 turns, both simulations are stable and equivalent to the default simulation (Figure \ref{fig:default}). The only long-term difference is that, with only one rabbit, there is a high chance that it dies before finding a patch of grass; whereas with 300 it is virtually guaranteed that some of them will find enough grass to reproduce.
-
 \begin{figure}[h]
     \centering
-    \begin{subfigure}[H]{\textwidth}
+    \begin{subfigure}{\textwidth}
         \includegraphics[width = \textwidth]{1-rabbit-default}
         \caption{Population graph for 1 starting rabbit, other values default}
         \label{fig:1-rabbit}
     \end{subfigure}
     ~
-    \begin{subfigure}[H]{\textwidth}
+    \begin{subfigure}{\textwidth}
         \includegraphics[width = \textwidth]{300-rabbits-default}
         \caption{Population graph for 300 starting rabbits, other values default}
         \label{fig:300-rabbits}
@@ -86,18 +84,62 @@ As shown in Figure \ref{fig:exp-1}, after the first 50 turns, both simulations a
     \caption{Experiment 1}\label{fig:exp-1}
 \end{figure}
 
-\subsection{Experiment 2}
+As shown in Figure \ref{fig:exp-1}, after the first 50 turns, both simulations are stable and equivalent to the default simulation (Figure \ref{fig:default}). The only long-term difference is that, with only one rabbit, there is a high chance that it dies before finding a patch of grass; whereas with 300 it is virtually guaranteed that some of them will find enough grass to reproduce.
+
+
+\subsection{Experiment 2: varying birth cost}
 
 \subsubsection{Setting}
+In this experiment, we fiddled with _birthCost_, setting it first to 10 (Figure \ref{fig:birth-cost-10}), then to 100 (Figure \ref{fig:birth-cost-100}).
 
 \subsubsection{Observations}
 % Elaborate on the observed results %
 
-\subsection{Experiment n}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width = \textwidth]{birth-cost-10}
+        \caption{Population graph for _birthCost_ = 10, other parameters default}
+        \label{fig:birth-cost-10}
+    \end{subfigure}
+    ~
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width = \textwidth]{birth-cost-100}
+        \caption{Population graph for _birthCost_ = 100, other parameters default}
+        \label{fig:birth-cost-100}
+    \end{subfigure}
+    \caption{Experiment 2}\label{fig:exp-2}
+\end{figure}
+
+Setting the birth cost to a high value led to the average grass and rabbit populations being the same as with default parameters, albeit with less variation: this is because rabbits ``spend" all their energy to live, only rabbits who have been very successful in finding grass can use their energy to reproduce.
+
+On the other hand, setting _birthCost_ to a low value means the population graph has a lot of variation, as rabbits will easily create new rabbits, but then find themselves with low energy and, if they cannot find grass fast enough, die. We also notice that the average population of rabbits is higher (50 rather than 40), and the grass population lower (85 instead of 100), than with the default parameters.
+
+
+
+\subsection{Experiment 3: high-energy grass}
 
 \subsubsection{Setting}
+This time, we changed the energy received when eating a grass tile. While just raising that value gave us expected results (similar to default, but with less average grass and more average rabbit populations); we tried raising the energy given by grass, but also lowering significantly its spawn rate (Figure \ref{fig:growth-2-energy-100}). Then we tried that in a much larger world (Figure \ref{fig:energy-100-startEnergy-15-world-100-100}).
 
 \subsubsection{Observations}
 % Elaborate on the observed results %
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width = \textwidth]{growth-2-energy-100}
+        \caption{Population graph for _grassGrowth_=2 and _grassEnergy_=100, other parameters default}
+        \label{fig:growth-2-energy-100}
+    \end{subfigure}
+    ~
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width = \textwidth]{energy-100-startEnergy-15-world-100-100}
+        \caption{Population graph for _grassEnergy_=100 and _startEnergy_=15, in a 100x100 world, other parameters default}
+        \label{fig:energy-100-startEnergy-15-world-100-100}
+    \end{subfigure}
+    \caption{Experiment 3}\label{fig:exp-3}
+\end{figure}
+
+We can see that in both cases, the average number of rabbits is higher than the default, since more total energy is spawned per step. Furthermore, the variations in rabbit population is high: this is because finding food is difficult in both cases, but as soon as a path of grass is found, the rabbit reproduces around 5 times, so total deaths and births are high.
 
 \end{document}
