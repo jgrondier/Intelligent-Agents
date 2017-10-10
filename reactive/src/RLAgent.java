@@ -20,9 +20,8 @@ public class RLAgent implements ReactiveBehavior {
     public static int ID = 0;
 
 
-    private ArrayList<RLState> states;
-
-    private HashMap<RLState, Action> optimalAction = new HashMap<>();
+    private ArrayList<RLState> states = new ArrayList<>();
+    private HashMap<RLState, List> possibleActions = new HashMap<>();
 
     //Legacy variables to make testing the setup work
     //TODO: not forget to remove these
@@ -55,6 +54,20 @@ public class RLAgent implements ReactiveBehavior {
                     states.add(new RLState(c1, c2));
                 }
             }
+        }
+
+        //We build a hashmap of the possibles actions of each state
+        for (RLState state : states) {
+            ArrayList tmp = new ArrayList<>();
+
+            if (state.HasTask()) {
+                //TODO: tmp.add Pickup
+            } else {
+                for (City c : state.getCurrentCity().neighbors()) {
+                    //TODO: tmp.add Move to c
+                }
+            }
+            possibleActions.put(state, tmp);
         }
 
 
