@@ -4,13 +4,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import java.util.Random;
-import logist.simulation.Vehicle;
 import logist.agent.Agent;
 import logist.behavior.ReactiveBehavior;
 import logist.plan.Action;
 import logist.plan.Action.Move;
 import logist.plan.Action.Pickup;
+import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.topology.Topology;
@@ -18,16 +17,10 @@ import logist.topology.Topology.City;
 
 public class RLAgent implements ReactiveBehavior {
     
-    public static int ID = 0;
-    
     private ArrayList<RLState> states = new ArrayList<RLState>();
     private HashMap<RLState, Tuple<RLAction, Double>> optimalAction = new HashMap<RLState, Tuple<RLAction, Double>>();
     private HashMap<City, ArrayList<RLState>> statesPerCity = new HashMap<City, ArrayList<RLState>>();
     
-    // Legacy variables to make testing the setup work
-    // TODO: not forget to remove these
-    private Random random;
-    private double pPickup;
     private int numActions;
     private Agent myAgent;
     
@@ -38,8 +31,6 @@ public class RLAgent implements ReactiveBehavior {
         // If the property is not present it defaults to 0.95
         Double discount = agent.readProperty("discount-factor", Double.class, 0.95);
         
-        this.random = new Random();
-        this.pPickup = discount;
         this.numActions = 0;
         this.myAgent = agent;
         
@@ -88,7 +79,6 @@ public class RLAgent implements ReactiveBehavior {
         }
         
         boolean hasChanged = false;
-        int i = 0;
         do {
             for (RLState rlState : states) {
                 ArrayList<Tuple<RLAction, Double>> q = new ArrayList<Tuple<RLAction, Double>>();
@@ -117,29 +107,33 @@ public class RLAgent implements ReactiveBehavior {
                     optimalAction.put(rlState, max);
                 
             }
-            i++;
-        } while (!hasChanged); // TODO
-        System.out.println(i);
+        } while (!hasChanged);
     }
     
     @Override
     public Action act(Vehicle vehicle, Task availableTask) {
-        Action action;
-        
-        if (availableTask == null || random.nextDouble() > pPickup) {
-            City currentCity = vehicle.getCurrentCity();
-            action = new Move(currentCity.randomNeighbor(random));
-        } else {
-            action = new Pickup(availableTask);
-        }
-        
         if (numActions >= 1) {
             System.out.println("The total profit after " + numActions + " actions is " + myAgent.getTotalProfit()
                     + " (average profit: " + (myAgent.getTotalProfit() / (double) numActions) + ")");
         }
         numActions++;
         
-        return action;
+        RLState s;
+        if (availableTask == null)
+            s = new RLState(vehicle.getCurrentCity());
+        else
+            s = new RLState(vehicle.getCurrentCity(), availableTask.deliveryCity);
+        
+        RLAction bestAction = optimalAction.get(s)._1;
+        
+        switch (bestAction.getType()) {
+            case MOVE:
+                return new Move(bestAction.getDestination());
+            case PICKUP:
+                return new Pickup(availableTask);
+            default:
+                throw new IllegalStateException("Undefined best action for state " + s);
+        }
     }
 }
 

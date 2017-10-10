@@ -3,8 +3,8 @@ import logist.topology.Topology.City;
 abstract public class RLAction {
     
     
-    private Type type = Type.NONE;
-    private City destination;
+    private final Type type;
+    private final City destination;
     
     protected RLAction(Type type, City destination) {
         this.type = type;
@@ -23,10 +23,19 @@ abstract public class RLAction {
     public String toString() {
         return type.toString() + " to " + destination.name;
     }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        RLAction o = (RLAction) obj;
+        return o.type == this.type && o.getDestination() == this.getDestination();
+    }
 }
 
 enum Type {
-    PICKUP, MOVE, NONE
+    PICKUP, MOVE
 }
 
 class RLPickup extends RLAction {
