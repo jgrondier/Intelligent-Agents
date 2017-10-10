@@ -31,7 +31,7 @@ public class RLState {
         }
         RLState o = (RLState) obj;
         return currentCity.id == o.getCurrentCity().id && (destinationCity == null ? -1 : destinationCity.id) == (o.getDestinationCity() == null ? -1 : o.getDestinationCity().id)
-                && hasTask == o.HasTask();
+                && hasTask == o.hasTask();
     }
 
     public City getCurrentCity() {
@@ -42,7 +42,7 @@ public class RLState {
         return destinationCity;
     }
 
-    public boolean HasTask() {
+    public boolean hasTask() {
         return hasTask;
     }
 

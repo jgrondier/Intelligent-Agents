@@ -1,10 +1,7 @@
 import logist.topology.Topology.City;
 
-abstract class RLAction {
+abstract public class RLAction {
     
-    protected enum Type {
-        PICKUP, MOVE, NONE
-    }
     
     private Type type = Type.NONE;
     private City destination;
@@ -21,6 +18,15 @@ abstract class RLAction {
     public City getDestination() {
         return destination;
     }
+    
+    @Override
+    public String toString() {
+        return type.toString() + " to " + destination.name;
+    }
+}
+
+enum Type {
+    PICKUP, MOVE, NONE
 }
 
 class RLPickup extends RLAction {
@@ -31,7 +37,7 @@ class RLPickup extends RLAction {
 }
 
 class RLMove extends RLAction {
-
+    
     public RLMove(City destination) {
         super(Type.MOVE, destination);
     }
