@@ -87,6 +87,8 @@ public class RLAgent implements ReactiveBehavior {
             optimalAction.put(s, possibleActions.get(s).get(0));
         }
         
+        boolean hasChanged = false;
+        int i = 0;
         do {
             for (RLState rlState : states) {
                 ArrayList<Tuple<RLAction, Double>> q = new ArrayList<Tuple<RLAction, Double>>();
@@ -102,15 +104,22 @@ public class RLAgent implements ReactiveBehavior {
                     q.add(new Tuple<RLAction, Double>(tuple._1, tuple._2 + discount * sum));
                 }
                 
-                optimalAction.put(rlState, Collections.max(q, new Comparator<Tuple<RLAction, Double>>() {
+                Tuple<RLAction, Double> max = Collections.max(q, new Comparator<Tuple<RLAction, Double>>() {
                     @Override
                     public int compare(Tuple<RLAction, Double> o1, Tuple<RLAction, Double> o2) {
                         return Double.compare(o1._2, o2._2);
                     }
-                }));
+                });
+                
+                if (max.equals(optimalAction.get(rlState)))
+                    hasChanged = true;
+                else
+                    optimalAction.put(rlState, max);
+                
             }
-        } while (true); // TODO
-        
+            i++;
+        } while (!hasChanged); // TODO
+        System.out.println(i);
     }
     
     @Override
@@ -146,5 +155,16 @@ class Tuple<X, Y> {
     @Override
     public String toString() {
         return "(" + _1.toString() + ", " + _2.toString() + ")";
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (getClass() != obj.getClass() || ((Tuple<?, ?>) obj)._1.getClass() != _1.getClass()
+                || ((Tuple<?, ?>) obj)._2.getClass() != _2.getClass()) {
+            return false;
+        }
+        @SuppressWarnings("unchecked") // is actually checked just above
+        Tuple<X, Y> o = (Tuple<X, Y>) obj;
+        return this._1.equals((o._1)) && this._2.equals((o._2));
     }
 }
