@@ -21,7 +21,7 @@ public class RLAgent implements ReactiveBehavior {
 
 
     private ArrayList<RLState> states = new ArrayList<>();
-    private HashMap<RLState, List> possibleActions = new HashMap<>();
+    private HashMap<RLState, RLAction> optimalAction = new HashMap<>();
 
     //Legacy variables to make testing the setup work
     //TODO: not forget to remove these
@@ -44,6 +44,8 @@ public class RLAgent implements ReactiveBehavior {
         this.numActions = 0;
         this.myAgent = agent;
 
+        double costPerKm = agent.vehicles().get(0).costPerKm();
+
         //We generate the states list
         for (City c1 : topology.cities()) {
             //State of having no task in that city
@@ -56,20 +58,39 @@ public class RLAgent implements ReactiveBehavior {
             }
         }
 
+
+        HashMap<RLState, List<Tuple<RLAction, Double>>> possibleActions = new HashMap<>();
+
+
         //We build a hashmap of the possibles actions of each state
         for (RLState state : states) {
-            ArrayList tmp = new ArrayList<>();
 
-            if (state.HasTask()) {
-                //TODO: tmp.add Pickup
-            } else {
-                for (City c : state.getCurrentCity().neighbors()) {
-                    //TODO: tmp.add Move to c
-                }
+            City currentCity = state.getCurrentCity();
+
+            ArrayList<Tuple<RLAction, Double>> tmp = new ArrayList<>();
+
+            for (City c : topology.cities()) {
+                tmp.add(new Tuple<>(new RLPickup(c), (double) td.reward(currentCity, c)));
             }
+
+            for (City c : currentCity.neighbors()) {
+                tmp.add(new Tuple<>(new RLMove(c), costPerKm * currentCity.distanceTo(c)));
+            }
+
             possibleActions.put(state, tmp);
         }
 
+
+        for (RLState s : states) {
+
+            double maxReward = Double.NEGATIVE_INFINITY;
+
+            for (Tuple<RLAction, Double> a : possibleActions.get(s)) {
+
+                //TODO: COMPLETE
+
+            }
+        }
 
         //TODO: Continue working
 
@@ -93,5 +114,15 @@ public class RLAgent implements ReactiveBehavior {
         numActions++;
 
         return action;
+    }
+}
+
+class Tuple<X, Y> {
+    public final X _1;
+    public final Y _2;
+
+    public Tuple(X _1, Y _2) {
+        this._1 = _1;
+        this._2 = _2;
     }
 }
