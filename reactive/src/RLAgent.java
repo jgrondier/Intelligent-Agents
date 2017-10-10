@@ -47,12 +47,10 @@ public class RLAgent implements ReactiveBehavior {
 
         //We generate the states list
         for (City c1 : topology.cities()) {
-            for (City c2 : c1.neighbors()) {
-                //We don't generate illegal states like moving to a non neighbouring city
-                if (c2.neighbors().contains(c1)) {
-                    states.add(new RLState(c1));
-                }
-                //Or delivering to the same city
+            //State of having no task in that city
+            states.add(new RLState(c1));
+            for (City c2 : topology.cities()) {
+                //Can't deliver to the same city
                 if (c2 != c1) {
                     states.add(new RLState(c1, c2));
                 }
