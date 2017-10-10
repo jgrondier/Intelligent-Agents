@@ -88,7 +88,6 @@ public class RLAgent implements ReactiveBehavior {
         }
         
         boolean hasChanged = false;
-        int i = 0;
         do {
             for (RLState rlState : states) {
                 ArrayList<Tuple<RLAction, Double>> q = new ArrayList<Tuple<RLAction, Double>>();
@@ -117,29 +116,34 @@ public class RLAgent implements ReactiveBehavior {
                     optimalAction.put(rlState, max);
                 
             }
-            i++;
-        } while (!hasChanged); // TODO
-        System.out.println(i);
+        } while (!hasChanged);
     }
     
     @Override
     public Action act(Vehicle vehicle, Task availableTask) {
-        Action action;
-        
-        if (availableTask == null || random.nextDouble() > pPickup) {
-            City currentCity = vehicle.getCurrentCity();
-            action = new Move(currentCity.randomNeighbor(random));
-        } else {
-            action = new Pickup(availableTask);
-        }
-        
         if (numActions >= 1) {
             System.out.println("The total profit after " + numActions + " actions is " + myAgent.getTotalProfit()
                     + " (average profit: " + (myAgent.getTotalProfit() / (double) numActions) + ")");
         }
         numActions++;
         
-        return action;
+        RLState s;
+        if (availableTask == null)
+            s = new RLState(vehicle.getCurrentCity());
+        else
+            s = new RLState(vehicle.getCurrentCity(), availableTask.deliveryCity);
+        
+        RLAction bestAction = optimalAction.get(s)._1;
+        
+        switch (bestAction.getType()) {
+            case MOVE:
+                return new Move(bestAction.getDestination());
+            case PICKUP:
+                return new Pickup(availableTask);
+            case NONE:
+            default:
+                throw new IllegalStateException("Undefined best action for state " + s);
+        }
     }
 }
 
