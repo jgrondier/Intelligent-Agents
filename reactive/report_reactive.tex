@@ -35,19 +35,19 @@
 A state is represented by our class RLState: it has an obligatory
 attribute describing the current city and two other optional describing
 if it has a pickup task and the destination of the pickup task. There
-are $N(N+1)$ possible states.
+are $N^2$ possible states: one for each of the $N$ cities where no task is available, and $N-1$ per city for each of the possible task destinations.
 
 The possible actions is a mapping from each state to each possible
 RLAction originating from the current city. There are $2N$ actions
-originating from each city.
+originating from each city, although some are invalid (see \ref{RLAction-impl}).
 
 A reward is associated to each action as each action always has the
 same reward. We get the reward for deliveries from Task Distribution,
-and deduce the cost of traveling by knowing the distance between cities
-and the cost per kilometer of moving.
+and deduct the cost of traveling by knowing the distance between cities
+and the cost per kilometer of movement.
 
 The probability transition table is generated using the probability
-of a pickup going for each city appearing at the destination city. 
+of a pickup with each city as a destination appearing at the destination city. 
 
 \subsection{Implementation Details}
 
@@ -62,7 +62,7 @@ destination city for the task $destinationCity$ . When building our
 list of possible states, we ignore impossible actions, such as a task
 with destination the source city.
 
-\subsubsection{RLAction}
+\subsubsection{RLAction} \label{RLAction-impl}
 
 RLAction is our super-class representing an action. An action can
 be a move (RLMove) or a pickup (RLPickup). We build an action list
@@ -84,6 +84,7 @@ simple moves are just a net loss of the travel cost.
 The probability transition table does not need to be built before
 applying the algorithm: we can just deduce it from the probability
 table given by the Task Distribution in the setup.
+\\This is because we only consider states whose $currentCity$ attribute is the destination of the RLAction we are looking up the table for.
 
 \section{Results}
 
@@ -96,7 +97,7 @@ table given by the Task Distribution in the setup.
 \subsubsection{Setting}
 
 All figures have seed 42 and using the settings reactive.xml, but
-we tested with other seeds. We tested with the following discount
+we also tested with other seeds, with comparable results. We tested with the following discount
 values: 0, 0.5, 0.85, and 0.99.
 
 \begin{figure}[H]
@@ -156,7 +157,7 @@ iterations vs 1000) to get only slightly better results.
 As we can see, our agent performs significantly better than a totally
 random agent. We also notice that the graphs for the Reactive agent
 isn't the same as previously because the addition of another agent
-alters the task distribution. However in the end, our agent still
+alters the pRNG results for our agent, since only one pRNG is used for spawning tasks for the whole simulation. However in the end, our agent still
 converges toward the same values.
 
 \subsection{Experiment 3: Three of our agents}
@@ -176,7 +177,7 @@ converges toward the same values.
 
 \subsubsection{Observations}
 
-Even though each of the agents has different results at the begin,
+Even though each of the agents has different results at the beginning,
 they all end up converging toward the same value as found before.
 
 \subsection{Experiment 3: Netherlands}
@@ -197,6 +198,6 @@ they all end up converging toward the same value as found before.
 \subsubsection{Observations}
 
 There is nothing much to say that wasn't found in the previous analysis.
-We would just like to not that closer cities with better connections
-lead to better profits, even for a random agent.
+We would just like to note that closer cities with better connections
+lead to better profits, even for a random agent, as less money is spent on travel costs.
 \end{document}
