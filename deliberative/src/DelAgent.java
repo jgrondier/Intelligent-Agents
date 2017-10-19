@@ -1,5 +1,8 @@
 /* import table */
 import logist.simulation.Vehicle;
+
+import java.util.ArrayList;
+
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
 import logist.plan.Plan;
@@ -65,6 +68,17 @@ public class DelAgent implements DeliberativeBehavior {
                 throw new AssertionError("Should not happen.");
         }
         return plan;
+    }
+    
+    private Plan BFSPlan(DelState state) {        
+        ArrayList<DelState> queue = new ArrayList<>();
+        queue.add(state);
+        ArrayList<DelState> checked = new ArrayList<>();
+        
+        do {
+            //TODO
+        } while (!queue.isEmpty());
+        throw new IllegalStateException("Could not compute any path");
     }
     
     private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {

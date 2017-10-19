@@ -1,4 +1,3 @@
-import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology;
@@ -11,6 +10,7 @@ public class DelState {
     TaskSet worldTasks;
     TaskSet pickedTasks;
     Topology.City location;
+    double totalCost = 0;
 
     int capacity;
 
@@ -21,7 +21,7 @@ public class DelState {
         this.capacity = capacity;
     }
 
-    public List<DelState> nextStates() {
+    public List<DelState> nextStates(int costPerKm) {
 
         ArrayList<DelState> l = new ArrayList<>();
 
@@ -35,8 +35,10 @@ public class DelState {
             DelState tmp = new DelState(this);
             tmp.pickedTasks.remove(t);
 
-            capacity += t.weight;
+            tmp.addCost(costPerKm * location.distanceTo(t.deliveryCity));
 
+            capacity += t.weight;
+            
             l.add(tmp);
         }
 
@@ -48,6 +50,8 @@ public class DelState {
             if (capacity >= t.weight) {
                 tmp.worldTasks.remove(t);
                 tmp.pickedTasks.add(t);
+
+                tmp.addCost(costPerKm * location.distanceTo(t.pickupCity));
 
                 capacity -= t.weight;
 
@@ -63,6 +67,11 @@ public class DelState {
 
     public DelState(DelState d) {
         this(d.getWorldTasks().clone(), d.getPickedTasks().clone(), d.getLocation(), d.getCapacity());
+        totalCost = d.getTotalCost();
+    }
+
+    public double getTotalCost() {
+        return totalCost;
     }
 
     public TaskSet getWorldTasks() {
@@ -96,5 +105,35 @@ public class DelState {
     public void setCapacity(int capacity) {
         this.capacity = capacity;
     }
+    
+    public void addCost(double d) {
+        this.totalCost += d; 
+    }
 }
 
+
+class Tuple<X, Y> {
+    public final X _1;
+    public final Y _2;
+    
+    public Tuple(X _1, Y _2) {
+        this._1 = _1;
+        this._2 = _2;
+    }
+    
+    @Override
+    public String toString() {
+        return "(" + _1.toString() + ", " + _2.toString() + ")";
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (getClass() != obj.getClass() || ((Tuple<?, ?>) obj)._1.getClass() != _1.getClass()
+                || ((Tuple<?, ?>) obj)._2.getClass() != _2.getClass()) {
+            return false;
+        }
+        @SuppressWarnings("unchecked") // is actually checked just above
+        Tuple<X, Y> o = (Tuple<X, Y>) obj;
+        return this._1.equals((o._1)) && this._2.equals((o._2));
+    }
+}
