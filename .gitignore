@@ -25,3 +25,6 @@ hs_err_pid*
 *.synctex.gz
 
 */.settings/*
+
+history.xml
+*/.idea/*
