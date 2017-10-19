@@ -2,6 +2,8 @@
 import logist.simulation.Vehicle;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
@@ -28,10 +30,12 @@ public class DelAgent implements DeliberativeBehavior {
     /* the properties of the agent */
     Agent agent;
     int capacity;
-    int cost;
+    int costPerKm;
     
     /* the planning class */
     Algorithm algorithm;
+    
+    TaskSet carriedTasks = TaskSet.create(new Task[0]); //start off empty
     
     @Override
     public void setup(Topology topology, TaskDistribution td, Agent agent) {
@@ -41,7 +45,7 @@ public class DelAgent implements DeliberativeBehavior {
         
         // initialize the planner
         capacity = agent.vehicles().get(0).capacity();
-        cost = agent.vehicles().get(0).costPerKm();
+        costPerKm = agent.vehicles().get(0).costPerKm();
         String algorithmName = agent.readProperty("algorithm", String.class, "ASTAR");
         
         // Throws IllegalArgumentException if algorithm is unknown
@@ -54,6 +58,8 @@ public class DelAgent implements DeliberativeBehavior {
     public Plan plan(Vehicle vehicle, TaskSet tasks) {
         Plan plan;
         
+        DelState state = new DelState(tasks, vehicle.getCurrentTasks(), vehicle.getCurrentCity(), vehicle.capacity());
+        
         // Compute the plan with the selected algorithm.
         switch (algorithm) {
             case ASTAR:
@@ -61,8 +67,7 @@ public class DelAgent implements DeliberativeBehavior {
                 plan = naivePlan(vehicle, tasks);
                 break;
             case BFS:
-                // ...
-                plan = naivePlan(vehicle, tasks);
+                plan = BFSPlan(state);
                 break;
             default:
                 throw new AssertionError("Should not happen.");
@@ -71,12 +76,19 @@ public class DelAgent implements DeliberativeBehavior {
     }
     
     private Plan BFSPlan(DelState state) {        
-        ArrayList<DelState> queue = new ArrayList<>();
+        Queue<DelState> queue = new LinkedList<>();
         queue.add(state);
         ArrayList<DelState> checked = new ArrayList<>();
         
         do {
-            //TODO
+            DelState n = queue.poll();
+            if (n.nextStates(costPerKm).isEmpty()) {
+                System.out.println(n.getActions().size());
+                return new Plan(state.getLocation(), n.getActions());}
+            if (!checked.contains(n)) {
+                checked.add(n);
+                queue.addAll(n.nextStates(costPerKm));
+            }
         } while (!queue.isEmpty());
         throw new IllegalStateException("Could not compute any path");
     }
@@ -106,11 +118,6 @@ public class DelAgent implements DeliberativeBehavior {
     
     @Override
     public void planCancelled(TaskSet carriedTasks) {
-        
-        if (!carriedTasks.isEmpty()) {
-            // This cannot happen for this simple agent, but typically
-            // you will need to consider the carriedTasks when the next
-            // plan is computed.
-        }
+        //handling carriedTasks is not needed since we can call vehicle.getCurrentTasks()
     }
 }

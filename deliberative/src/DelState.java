@@ -2,19 +2,20 @@ import logist.plan.Action;
 import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology;
+import logist.topology.Topology.City;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DelState {
     
-    TaskSet worldTasks;
-    TaskSet pickedTasks;
-    Topology.City location;
-    double totalCost = 0;
-    ArrayList<Action> actions = new ArrayList<>();
+    private TaskSet worldTasks;
+    private TaskSet pickedTasks;
+    private Topology.City location;
+    private double totalCost = 0;
+    private ArrayList<Action> actions = new ArrayList<>();
     
-    int capacity;
+    private int capacity;
     
     public DelState(TaskSet worldTasks, TaskSet carriedTasks, Topology.City location, int capacity) {
         this.worldTasks = worldTasks;
@@ -39,6 +40,10 @@ public class DelState {
             
             tmp.addCost(costPerKm * location.distanceTo(t.deliveryCity));
             
+            for (City c : location.pathTo(t.deliveryCity)) {
+                tmp.addAction(new Action.Move(c));
+            }
+            
             tmp.addAction(new Action.Delivery(t));
             
             tmp.setCapacity(capacity + t.weight);
@@ -57,6 +62,10 @@ public class DelState {
                 tmp.setLocation(t.pickupCity);
                 
                 tmp.addCost(costPerKm * location.distanceTo(t.pickupCity));
+
+                for (City c : location.pathTo(t.pickupCity)) {
+                    tmp.addAction(new Action.Move(c));
+                }
                 
                 tmp.addAction(new Action.Pickup(t));
 
@@ -122,5 +131,21 @@ public class DelState {
     
     public ArrayList<Action> getActions() {
         return new ArrayList<>(actions);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        DelState o = (DelState) obj;
+        boolean eq = true;
+        //eq = eq && this.actions.equals(o.getActions());
+        eq = eq && this.worldTasks.equals(o.getWorldTasks());
+        eq = eq && this.pickedTasks.equals(o.getPickedTasks());
+        eq = eq && this.location.equals(o.getLocation());
+        eq = eq && this.capacity == o.getCapacity();
+        //eq = eq && this.totalCost == o.getTotalCost();
+        return eq;
     }
 }
