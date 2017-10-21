@@ -12,13 +12,13 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import logist.topology.Topology.City;
 
 /**
  * An optimal planner for one vehicle.
  */
 public class DelAgent implements DeliberativeBehavior {
 
+	
     enum Algorithm {
         BFS, ASTAR
     }
@@ -31,6 +31,8 @@ public class DelAgent implements DeliberativeBehavior {
     Agent agent;
     int capacity;
     int costPerKm;
+    
+    long planCalcTime = 0;
 
     /* the planning class */
     Algorithm algorithm;
@@ -56,6 +58,7 @@ public class DelAgent implements DeliberativeBehavior {
 
     @Override
     public Plan plan(Vehicle vehicle, TaskSet tasks) {
+    	long time = System.currentTimeMillis();
         Plan plan;
 
         DelState state = new DelState(tasks, vehicle.getCurrentTasks(), vehicle.getCurrentCity(), vehicle.capacity());
@@ -71,6 +74,9 @@ public class DelAgent implements DeliberativeBehavior {
             default:
                 throw new AssertionError("Should not happen.");
         }
+        
+        planCalcTime += System.currentTimeMillis() - time;
+        System.out.println(planCalcTime + "ms");
         return plan;
     }
 
@@ -107,7 +113,7 @@ public class DelAgent implements DeliberativeBehavior {
         }
 
 
-        throw new IllegalStateException("Please jojo no");
+        throw new IllegalStateException("Could not compute any path");
 
     }
 
@@ -131,6 +137,7 @@ public class DelAgent implements DeliberativeBehavior {
         throw new IllegalStateException("Could not compute any path");
     }
 
+    /*
     private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
         City current = vehicle.getCurrentCity();
         Plan plan = new Plan(current);
@@ -153,6 +160,7 @@ public class DelAgent implements DeliberativeBehavior {
         }
         return plan;
     }
+    */
 
     @Override
     public void planCancelled(TaskSet carriedTasks) {
