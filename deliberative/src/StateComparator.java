@@ -5,41 +5,43 @@ import java.util.function.Function;
 
 public class StateComparator implements Comparator<DelState> {
 
+	int costPerKm;
 
-    int costPerKm;
+	public StateComparator(int costPerKm) {
+		super();
 
-    public StateComparator(int costPerKm) {
-        super();
+		this.costPerKm = costPerKm;
+	}
 
-        this.costPerKm = costPerKm;
-    }
+	@Override
+	public int compare(DelState t1, DelState t2) {
+		return (int) (f(t1) - f(t2));
+	}
 
-    @Override
-    public int compare(DelState t1, DelState t2) {
-        return (int) (f(t1) - f(t2));
-    }
+	public double f(DelState t) {
 
+		return t.getTotalCost() + h(t);
 
-    public double f(DelState t) {
+	}
 
-        return t.getTotalCost() + h(t);
+	public double h(DelState t) {
 
-    }
-
-    public double h(DelState t) {
-
-
-        double max = Double.MIN_VALUE;
-
-        for (Task tmp : t.getWorldTasks()) {
-            double distance = t.getLocation().distanceTo(tmp.deliveryCity);
-            if (distance > max) {
-                max = distance;
-            }
-        }
-
-        return (max * costPerKm);
-    }
-
+		double max = 0;
+		if (!t.getWorldTasks().isEmpty())
+			for (Task tmp : t.getWorldTasks()) {
+				double distance = t.getLocation().distanceTo(tmp.pickupCity) + tmp.deliveryCity.distanceTo(tmp.pickupCity);
+				if (distance > max) {
+					max = distance;
+				}
+			}
+		else
+			for (Task tmp : t.getPickedTasks()) {
+				double distance = t.getLocation().distanceTo(tmp.deliveryCity);
+				if (distance > max) {
+					max = distance;
+				}
+			}
+		return (max * costPerKm);
+	}
 
 }

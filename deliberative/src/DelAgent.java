@@ -101,12 +101,11 @@ public class DelAgent implements DeliberativeBehavior {
 
             List<DelState> copies = C.stream().filter(x -> x.equals(n)).collect(Collectors.toList());
 
-            Collections.sort(copies, comp);
+            copies.sort(comp);
 
             if (copies.isEmpty() || copies.get(0).getTotalCost() > n.getTotalCost()) {
-
+            	C.add(n);
                 Q.addAll(successors);
-
             }
 
 
@@ -126,7 +125,6 @@ public class DelAgent implements DeliberativeBehavior {
         do {
             DelState n = queue.poll();
             if (n.nextStates(costPerKm).isEmpty()) {
-                System.out.println(n.getActions().size());
                 return new Plan(state.getLocation(), n.getActions());
             }
             if (!checked.contains(n)) {

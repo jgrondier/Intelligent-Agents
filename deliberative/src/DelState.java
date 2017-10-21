@@ -140,12 +140,9 @@ public class DelState {
         }
         DelState o = (DelState) obj;
         boolean eq = true;
-        //eq = eq && this.actions.equals(o.getActions());
         eq = eq && this.worldTasks.equals(o.getWorldTasks());
         eq = eq && this.pickedTasks.equals(o.getPickedTasks());
         eq = eq && this.location.equals(o.getLocation());
-        eq = eq && this.capacity == o.getCapacity();
-        //eq = eq && this.totalCost == o.getTotalCost();
         return eq;
     }
 
