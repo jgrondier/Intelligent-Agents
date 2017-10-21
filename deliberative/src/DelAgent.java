@@ -18,7 +18,7 @@ import logist.topology.Topology;
  */
 public class DelAgent implements DeliberativeBehavior {
 
-	
+
     enum Algorithm {
         BFS, ASTAR
     }
@@ -31,7 +31,7 @@ public class DelAgent implements DeliberativeBehavior {
     Agent agent;
     int capacity;
     int costPerKm;
-    
+
     long planCalcTime = 0;
 
     /* the planning class */
@@ -58,7 +58,7 @@ public class DelAgent implements DeliberativeBehavior {
 
     @Override
     public Plan plan(Vehicle vehicle, TaskSet tasks) {
-    	long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         Plan plan;
 
         DelState state = new DelState(tasks, vehicle.getCurrentTasks(), vehicle.getCurrentCity(), vehicle.capacity());
@@ -74,7 +74,7 @@ public class DelAgent implements DeliberativeBehavior {
             default:
                 throw new AssertionError("Should not happen.");
         }
-        
+
         planCalcTime += System.currentTimeMillis() - time;
         System.out.println(planCalcTime + "ms");
         return plan;
@@ -88,14 +88,18 @@ public class DelAgent implements DeliberativeBehavior {
         Q.add(state);
         PriorityQueue<DelState> C = new PriorityQueue<>(comp);
 
+        int i = 0;
+
         while (!Q.isEmpty()) {
 
+            i++;
 
             DelState n = Q.poll();
 
             List<DelState> successors = n.nextStates(costPerKm);
 
             if (successors.isEmpty()) {
+                System.out.println("Loops: " + i);
                 return new Plan(state.getLocation(), n.getActions());
             }
 
@@ -104,7 +108,7 @@ public class DelAgent implements DeliberativeBehavior {
             copies.sort(comp);
 
             if (copies.isEmpty() || copies.get(0).getTotalCost() > n.getTotalCost()) {
-            	C.add(n);
+                C.add(n);
                 Q.addAll(successors);
             }
 
@@ -122,9 +126,12 @@ public class DelAgent implements DeliberativeBehavior {
         queue.add(state);
         ArrayList<DelState> checked = new ArrayList<>();
 
+        int i = 0;
         do {
+            i++;
             DelState n = queue.poll();
             if (n.nextStates(costPerKm).isEmpty()) {
+                System.out.println("Loops: " + i);
                 return new Plan(state.getLocation(), n.getActions());
             }
             if (!checked.contains(n)) {
