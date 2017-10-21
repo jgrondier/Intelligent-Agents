@@ -19,6 +19,8 @@ import logist.topology.Topology;
 public class DelAgent implements DeliberativeBehavior {
 
 
+    private static int i = 0;
+
     enum Algorithm {
         BFS, ASTAR
     }
@@ -32,7 +34,7 @@ public class DelAgent implements DeliberativeBehavior {
     int capacity;
     int costPerKm;
 
-    long planCalcTime = 0;
+    static long planCalcTime = 0;
 
     /* the planning class */
     Algorithm algorithm;
@@ -88,7 +90,6 @@ public class DelAgent implements DeliberativeBehavior {
         Q.add(state);
         PriorityQueue<DelState> C = new PriorityQueue<>(comp);
 
-        int i = 0;
 
         while (!Q.isEmpty()) {
 
@@ -126,7 +127,6 @@ public class DelAgent implements DeliberativeBehavior {
         queue.add(state);
         ArrayList<DelState> checked = new ArrayList<>();
 
-        int i = 0;
         do {
             i++;
             DelState n = queue.poll();
