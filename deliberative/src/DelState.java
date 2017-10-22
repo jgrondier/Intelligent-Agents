@@ -53,10 +53,10 @@ public class DelState {
 
         // Next pickup tasks
         for (Task t : worldTasks) {
-
-            DelState tmp = new DelState(this);
-
             if (capacity >= t.weight) {
+
+                DelState tmp = new DelState(this);
+
                 tmp.worldTasks.remove(t);
                 tmp.pickedTasks.add(t);
                 tmp.setLocation(t.pickupCity);

@@ -1,7 +1,6 @@
 import logist.task.Task;
 
 import java.util.Comparator;
-import java.util.function.Function;
 
 public class StateComparator implements Comparator<DelState> {
 

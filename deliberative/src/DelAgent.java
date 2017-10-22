@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
 import logist.plan.Plan;
-import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
@@ -20,6 +19,7 @@ public class DelAgent implements DeliberativeBehavior {
 
 
     private static int i = 0;
+    static long planCalcTime = 0;
 
     enum Algorithm {
         BFS, ASTAR
@@ -34,12 +34,9 @@ public class DelAgent implements DeliberativeBehavior {
     int capacity;
     int costPerKm;
 
-    static long planCalcTime = 0;
 
     /* the planning class */
     Algorithm algorithm;
-
-    TaskSet carriedTasks = TaskSet.create(new Task[0]); //start off empty
 
     @Override
     public void setup(Topology topology, TaskDistribution td, Agent agent) {
