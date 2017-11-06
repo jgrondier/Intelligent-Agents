@@ -60,7 +60,19 @@ public class CSP {
         if (a2 == null)
             return 0.0;
 
-        return a1.task.deliveryCity.distanceTo(a2.task.pickupCity);
+        if (a1 instanceof DeliveryAction && a2 instanceof DeliveryAction)
+            return a1.task.deliveryCity.distanceTo(a2.task.deliveryCity);
+
+        if (a1 instanceof DeliveryAction && a2 instanceof PickupAction)
+            return a1.task.deliveryCity.distanceTo(a2.task.pickupCity);
+
+        if (a1 instanceof PickupAction && a2 instanceof DeliveryAction)
+            return a1.task.pickupCity.distanceTo(a2.task.deliveryCity);
+
+        if (a1 instanceof PickupAction && a2 instanceof PickupAction)
+            return a1.task.pickupCity.distanceTo(a2.task.pickupCity);
+
+        return Double.MAX_VALUE;
     }
 
     double dist(Vehicle v, Action a) {
@@ -116,20 +128,20 @@ public class CSP {
         for (Vehicle vehicle : this.actions.keySet()) {
             actions.put(vehicle, new ArrayList<>(this.actions.get(vehicle)));
         }
-        
-        List<Action> viActions = actions.get(vi); //reference to the arraylist at vi
+
+        List<Action> viActions = actions.get(vi); // reference to the arraylist at vi
 
         Action a1 = viActions.get(tIdx1);
         Action a2 = viActions.get(tIdx2);
-        
-        //check we don't invert pickup/delivery
+
+        // check we don't invert pickup/delivery
         for (int i = tIdx1 + 1; i < tIdx2; i++)
             if (viActions.get(i).task.equals(a1.task) || viActions.get(i).task.equals(a2.task))
                 return null;
 
         viActions.set(tIdx2, a1);
         viActions.set(tIdx1, a2);
-        
+
         // Check weight constraint is kept
         int weight = 0;
         for (Action action : viActions) {
@@ -143,7 +155,7 @@ public class CSP {
                 return null;
             }
         }
-        
+
         return new CSP(actions, vehiclesList);
     }
 

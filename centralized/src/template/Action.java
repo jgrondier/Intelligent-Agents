@@ -1,5 +1,6 @@
 package template;
 
+import logist.simulation.Vehicle;
 import logist.task.Task;
 
 public abstract class Action {
@@ -9,4 +10,6 @@ public abstract class Action {
     public Action(Task t) {
         this.task = t;
     }
+
+    abstract double dist(Vehicle v);
 }
