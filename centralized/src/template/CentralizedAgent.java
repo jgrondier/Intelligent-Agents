@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 @SuppressWarnings("unused")
 public class CentralizedAgent implements CentralizedBehavior {
@@ -51,7 +52,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 
     }
 
-    CSP SelectInitialSolution() {
+    public CSP SelectInitialSolution() {
         List<Vehicle> vehicleList = agent.vehicles();
         vehicleList.sort(Comparator.comparingInt(Vehicle::capacity).reversed());
         ArrayList<Action> actionsList = new ArrayList<>();
@@ -65,6 +66,41 @@ public class CentralizedAgent implements CentralizedBehavior {
             actions.put(vehicleList.get(i), new ArrayList<Action>());
         }
         return new CSP(actions, vehicleList);
+    }
+    
+    public List<CSP> chooseNeighbours(CSP old) {
+    	List<CSP> neighbours = new ArrayList<>();
+    	Vehicle vi;
+    	do {
+    		vi = old.vehiclesList.get(new Random().nextInt(old.vehiclesList.size()));
+    	} while (old.nextTask(vi)!=null);
+		Action t = old.nextTask(vi);
+    	
+		//Change Vehicle
+    	for (Vehicle vj : old.vehiclesList) {
+			if (vi == vj)
+				continue;
+			if (t.task.weight <= vj.capacity()) {
+				neighbours.add(old.changingVehicle(vi, vj));
+			}
+		}
+    	
+    	//Change Task Order
+    	int i = 0;
+    	do {
+    		t = old.nextTask(t);
+    		i++;
+    	} while (t!=null);
+    	
+    	if (i > 1) {
+    		for (int tIdx1 = 1; tIdx1 < i; tIdx1++) {
+				for (int tIdx2 = tIdx1; tIdx2 <= i; tIdx2++) {
+					neighbours.add(old.changingTaskOrder(vi, tIdx1, tIdx2));
+				}
+			}
+    	}
+    	
+    	return neighbours;
     }
 
     @Override
