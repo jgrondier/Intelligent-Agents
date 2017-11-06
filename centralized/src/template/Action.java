@@ -9,6 +9,4 @@ public abstract class Action {
     public Action(Task t) {
         this.task = t;
     }
-
-
 }

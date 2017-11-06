@@ -29,8 +29,7 @@ public class CentralizedAgent implements CentralizedBehavior {
     private long timeout_plan;
 
     @Override
-    public void setup(Topology topology, TaskDistribution distribution,
-                      Agent agent) {
+    public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
         // this code is used to get the timeouts
         LogistSettings ls = null;
@@ -49,7 +48,6 @@ public class CentralizedAgent implements CentralizedBehavior {
         this.distribution = distribution;
         this.agent = agent;
 
-
     }
 
     public CSP SelectInitialSolution() {
@@ -67,40 +65,42 @@ public class CentralizedAgent implements CentralizedBehavior {
         }
         return new CSP(actions, vehicleList);
     }
-    
+
     public List<CSP> chooseNeighbours(CSP old) {
-    	List<CSP> neighbours = new ArrayList<>();
-    	Vehicle vi;
-    	do {
-    		vi = old.vehiclesList.get(new Random().nextInt(old.vehiclesList.size()));
-    	} while (old.nextTask(vi)!=null);
-		Action t = old.nextTask(vi);
-    	
-		//Change Vehicle
-    	for (Vehicle vj : old.vehiclesList) {
-			if (vi == vj)
-				continue;
-			if (t.task.weight <= vj.capacity()) {
-				neighbours.add(old.changingVehicle(vi, vj));
-			}
-		}
-    	
-    	//Change Task Order
-    	int i = 0;
-    	do {
-    		t = old.nextTask(t);
-    		i++;
-    	} while (t!=null);
-    	
-    	if (i > 1) {
-    		for (int tIdx1 = 1; tIdx1 < i; tIdx1++) {
-				for (int tIdx2 = tIdx1; tIdx2 <= i; tIdx2++) {
-					neighbours.add(old.changingTaskOrder(vi, tIdx1, tIdx2));
-				}
-			}
-    	}
-    	
-    	return neighbours;
+        List<CSP> neighbours = new ArrayList<>();
+        Vehicle vi;
+        do {
+            vi = old.vehiclesList.get(new Random().nextInt(old.vehiclesList.size()));
+        } while (old.nextTask(vi) != null);
+        Action t = old.nextTask(vi);
+
+        // Change Vehicle
+        for (Vehicle vj : old.vehiclesList) {
+            if (vi == vj)
+                continue;
+            if (t.task.weight <= vj.capacity()) {
+                neighbours.add(old.changingVehicle(vi, vj));
+            }
+        }
+
+        // Change Task Order
+        int i = 0;
+        do {
+            t = old.nextTask(t);
+            i++;
+        } while (t != null);
+
+        if (i > 1) {
+            for (int tIdx1 = 1; tIdx1 < i; tIdx1++) {
+                for (int tIdx2 = tIdx1; tIdx2 <= i; tIdx2++) {
+                    CSP csp = old.changingTaskOrder(vi, tIdx1, tIdx2);
+                    if (csp != null)
+                        neighbours.add(csp);
+                }
+            }
+        }
+
+        return neighbours;
     }
 
     @Override
@@ -111,6 +111,5 @@ public class CentralizedAgent implements CentralizedBehavior {
     private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
         return null;
     }
-
 
 }
