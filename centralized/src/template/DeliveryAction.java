@@ -1,5 +1,6 @@
 package template;
 
+import logist.simulation.Vehicle;
 import logist.task.Task;
 
 public class DeliveryAction extends Action {
@@ -9,6 +10,12 @@ public class DeliveryAction extends Action {
         super(t);
     }
 
+
+    @Override
+    double dist(Vehicle v) {
+        return v.getCurrentCity().distanceTo(task.deliveryCity);
+
+    }
 
 
 }

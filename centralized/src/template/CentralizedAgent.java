@@ -67,40 +67,40 @@ public class CentralizedAgent implements CentralizedBehavior {
         }
         return new CSP(actions, vehicleList);
     }
-    
+
     public List<CSP> chooseNeighbours(CSP old) {
-    	List<CSP> neighbours = new ArrayList<>();
-    	Vehicle vi;
-    	do {
-    		vi = old.vehiclesList.get(new Random().nextInt(old.vehiclesList.size()));
-    	} while (old.nextTask(vi)!=null);
-		Action t = old.nextTask(vi);
-    	
-		//Change Vehicle
-    	for (Vehicle vj : old.vehiclesList) {
-			if (vi == vj)
-				continue;
-			if (t.task.weight <= vj.capacity()) {
-				neighbours.add(old.changingVehicle(vi, vj));
-			}
-		}
-    	
-    	//Change Task Order
-    	int i = 0;
-    	do {
-    		t = old.nextTask(t);
-    		i++;
-    	} while (t!=null);
-    	
-    	if (i > 1) {
-    		for (int tIdx1 = 1; tIdx1 < i; tIdx1++) {
-				for (int tIdx2 = tIdx1; tIdx2 <= i; tIdx2++) {
-					neighbours.add(old.changingTaskOrder(vi, tIdx1, tIdx2));
-				}
-			}
-    	}
-    	
-    	return neighbours;
+        List<CSP> neighbours = new ArrayList<>();
+        Vehicle vi;
+        do {
+            vi = old.vehiclesList.get(new Random().nextInt(old.vehiclesList.size()));
+        } while (old.nextTask(vi) != null);
+        Action t = old.nextTask(vi);
+
+        //Change Vehicle
+        for (Vehicle vj : old.vehiclesList) {
+            if (vi == vj)
+                continue;
+            if (t.task.weight <= vj.capacity()) {
+                neighbours.add(old.changingVehicle(vi, vj));
+            }
+        }
+
+        //Change Task Order
+        int i = 0;
+        do {
+            t = old.nextTask(t);
+            i++;
+        } while (t != null);
+
+        if (i > 1) {
+            for (int tIdx1 = 1; tIdx1 < i; tIdx1++) {
+                for (int tIdx2 = tIdx1; tIdx2 <= i; tIdx2++) {
+                    neighbours.add(old.changingTaskOrder(vi, tIdx1, tIdx2));
+                }
+            }
+        }
+
+        return neighbours;
     }
 
     @Override
