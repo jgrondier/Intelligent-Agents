@@ -1,5 +1,6 @@
 package template;
 
+import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 
@@ -14,6 +15,7 @@ public class CSP {
 
     private HashMap<Action, Vehicle> vehicle = new HashMap<>();
     private HashMap<Action, Integer> time = new HashMap<>();
+    private List<Plan> plans;
 
     public CSP(HashMap<Vehicle, List<Action>> actions, List<Vehicle> vehiclesList) {
 
@@ -28,6 +30,9 @@ public class CSP {
                 time.put(a, i + 1);
             }
         }
+
+        this.plans = buildPlans();
+
     }
 
     Action nextTask(Vehicle v) {
@@ -169,4 +174,30 @@ public class CSP {
         }
         return ret;
     }
+
+
+    private List<Plan> buildPlans() {
+
+        ArrayList<Plan> planList = new ArrayList<>();
+
+        for (Vehicle v : vehiclesList) {
+
+            ArrayList<logist.plan.Action> tmp = new ArrayList<>();
+
+            for (Action a : actions.get(v)) {
+                tmp.add(a.toLogistAction());
+            }
+
+            planList.add(new Plan(v.homeCity(), tmp));
+        }
+
+
+        return planList;
+    }
+
+    List<Plan> toPlan() {
+        return plans;
+    }
+
+
 }

@@ -12,4 +12,6 @@ public abstract class Action {
     }
 
     abstract double dist(Vehicle v);
+
+    abstract logist.plan.Action toLogistAction();
 }

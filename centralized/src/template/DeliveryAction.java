@@ -17,5 +17,8 @@ public class DeliveryAction extends Action {
 
     }
 
-
+    @Override
+    logist.plan.Action toLogistAction() {
+        return new logist.plan.Action.Delivery(task);
+    }
 }

@@ -12,6 +12,11 @@ public class PickupAction extends Action {
 
 
     @Override
+    logist.plan.Action toLogistAction() {
+        return new logist.plan.Action.Pickup(task);
+    }
+
+    @Override
     double dist(Vehicle v) {
         return v.getCurrentCity().distanceTo(task.pickupCity);
 
