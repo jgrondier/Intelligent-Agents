@@ -14,6 +14,7 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,9 @@ import java.util.Random;
 @SuppressWarnings("unused")
 public class CentralizedAgent implements CentralizedBehavior {
 
+    private static final int ITERATIONS_MAX = 100000; //max SLS iterations
+    private static final float CHOICE_PROBABILITY = 0.4f; //for localChoice
+    private static final float EPSILON = 0.01f; //cost comparison
     private Topology topology;
     private TaskDistribution distribution;
     private Agent agent;
@@ -34,7 +38,7 @@ public class CentralizedAgent implements CentralizedBehavior {
         // this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = Parsers.parseSettings("config\\settings_default.xml");
+            ls = Parsers.parseSettings("config/settings_default.xml");
         } catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
         }
@@ -50,12 +54,12 @@ public class CentralizedAgent implements CentralizedBehavior {
 
     }
 
-    public CSP SelectInitialSolution() {
-        List<Vehicle> vehicleList = agent.vehicles();
+    private CSP selectInitialSolution(List<Vehicle> vehicles, TaskSet tasks) {
+        List<Vehicle> vehicleList = new ArrayList<>(vehicles);
         vehicleList.sort(Comparator.comparingInt(Vehicle::capacity).reversed());
         ArrayList<Action> actionsList = new ArrayList<>();
         HashMap<Vehicle, List<Action>> actions = new HashMap<>();
-        for (Task t : agent.getTasks()) {
+        for (Task t : tasks) {
             actionsList.add(new PickupAction(t));
             actionsList.add(new DeliveryAction(t));
         }
@@ -66,7 +70,7 @@ public class CentralizedAgent implements CentralizedBehavior {
         return new CSP(actions, vehicleList);
     }
 
-    public List<CSP> chooseNeighbours(CSP old) {
+    private List<CSP> chooseNeighbours(CSP old) {
         List<CSP> neighbours = new ArrayList<>();
         Vehicle vi;
         do {
@@ -105,11 +109,38 @@ public class CentralizedAgent implements CentralizedBehavior {
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-        return null;
+        CSP csp = selectInitialSolution(vehicles, tasks);
+        
+        long start = System.currentTimeMillis();
+        int iterations = ITERATIONS_MAX;
+        
+        do {
+            CSP old = csp;
+            List<CSP> neighbours = chooseNeighbours(old);
+            csp = localChoice(neighbours, old);
+        } while (System.currentTimeMillis() - start > .02*timeout_plan && --iterations > 0);
+                
+        return csp.toPlan();
     }
 
-    private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
-        return null;
+    private CSP localChoice(List<CSP> neighbours, CSP old) {
+        List<CSP> best = new ArrayList<>();
+        double bestCost = Double.POSITIVE_INFINITY;
+        
+        for (CSP csp : neighbours) {
+            double cost = csp.totalCompanyCost();
+            if (Math.abs(bestCost-cost) > EPSILON) {
+                best.add(csp);
+            }
+            else if (bestCost > cost) {
+                bestCost = cost;
+                best.clear();
+                best.add(csp);
+            }
+        }
+        
+        Random r = new Random();
+        return r.nextFloat() > CHOICE_PROBABILITY ? old : best.get(r.nextInt(best.size()));
     }
 
 }

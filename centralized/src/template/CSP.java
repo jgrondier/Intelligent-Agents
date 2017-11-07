@@ -57,7 +57,7 @@ public class CSP {
 
     double dist(Action a1, Action a2) {
 
-        if (a2 == null)
+        if (a2 == null || a1 == null)
             return 0.0;
 
         if (a1 instanceof DeliveryAction && a2 instanceof DeliveryAction)
@@ -92,7 +92,7 @@ public class CSP {
 
     }
 
-    double TotalCompanyCost() {
+    double totalCompanyCost() {
 
         double C = 0.0;
 
