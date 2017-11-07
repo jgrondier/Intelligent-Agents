@@ -4,19 +4,23 @@ import logist.plan.Action;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
+import logist.topology.Topology;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class CSP {
 
-    private HashMap<Vehicle, List<CentralizedAction>> actions;
-    List<Vehicle> vehiclesList;
+    final private HashMap<Vehicle, List<CentralizedAction>> actions;
+    final List<Vehicle> vehiclesList;
+
+    private final static Random rnd = CentralizedAgent.rand;
 
     private HashMap<CentralizedAction, Vehicle> vehicle = new HashMap<>();
     private HashMap<CentralizedAction, Integer> time = new HashMap<>();
     private List<Plan> plans;
+
+    private double cost = 0.0;
 
     public CSP(HashMap<Vehicle, List<CentralizedAction>> actions, List<Vehicle> vehiclesList) {
 
@@ -31,8 +35,6 @@ public class CSP {
                 time.put(a, i + 1);
             }
         }
-
-        this.plans = buildPlans();
 
     }
 
@@ -61,109 +63,115 @@ public class CSP {
 
     }
 
-    double dist(CentralizedAction a1, CentralizedAction a2) {
 
-        if (a2 == null || a1 == null)
-            return 0.0;
+    public double totalCompanyCost() {
 
-        if (a1 instanceof CentralizedDeliveryAction && a2 instanceof CentralizedDeliveryAction)
-            return a1.task.deliveryCity.distanceTo(a2.task.deliveryCity);
 
-        if (a1 instanceof CentralizedDeliveryAction && a2 instanceof CentralizedPickupAction)
-            return a1.task.deliveryCity.distanceTo(a2.task.pickupCity);
+        this.toPlan(this.vehiclesList);
 
-        if (a1 instanceof CentralizedPickupAction && a2 instanceof CentralizedDeliveryAction)
-            return a1.task.pickupCity.distanceTo(a2.task.deliveryCity);
+        return this.cost;
 
-        if (a1 instanceof CentralizedPickupAction && a2 instanceof CentralizedPickupAction)
-            return a1.task.pickupCity.distanceTo(a2.task.pickupCity);
-
-        return Double.MAX_VALUE;
-    }
-
-    double dist(Vehicle v, CentralizedAction a) {
-
-        if (a == null)
-            return 0.0;
-
-        return v.getCurrentCity().distanceTo(a.task.pickupCity);
-    }
-
-    double length(CentralizedAction a) {
-
-        if (a == null)
-            return 0.0;
-
-        return a.task.pickupCity.distanceTo(a.task.deliveryCity);
-
-    }
-
-    double totalCompanyCost() {
-
-        double C = 0.0;
-
-        for (Vehicle v : vehiclesList) {
-            C += (dist(v, nextTask(v)) + length(nextTask(v))) * (double) v.costPerKm();
-            for (CentralizedAction a : actions.get(v)) {
-                C += (dist(a, nextTask(a)) + length(nextTask(a))) * (double) vehicle.get(a).costPerKm();
-            }
-        }
-        return C;
     }
 
     public CSP changingVehicle(Vehicle vi, Vehicle vj) {
+
+
         HashMap<Vehicle, List<CentralizedAction>> actions = new HashMap<>();
-        List<Vehicle> vehiclesList = new ArrayList<>();
-        for (Vehicle vehicle : this.vehiclesList) {
-            vehiclesList.add(vehicle);
-        }
+        List<Vehicle> vehiclesList = new ArrayList<>(this.vehiclesList);
+
+
         for (Vehicle vehicle : this.actions.keySet()) {
             actions.put(vehicle, new ArrayList<>(this.actions.get(vehicle)));
         }
+
+
         Task t = actions.get(vi).get(0).task;
-        actions.get(vj).addAll(0, removeTask(actions.get(vi), t));
-        return new CSP(actions, vehiclesList);
+
+        if (vj.capacity() >= t.weight) {
+
+            List ret = removeTask(actions.get(vi), t);
+
+            actions.get(vj).addAll(0, ret);
+
+            actions.get(vi).removeAll(ret);
+            return new CSP(actions, vehiclesList);
+        }
+
+        return this;
+
     }
 
-    public CSP changingTaskOrder(Vehicle vi, int tIdx1, int tIdx2) {
-        HashMap<Vehicle, List<CentralizedAction>> actions = new HashMap<>();
-        List<Vehicle> vehiclesList = new ArrayList<>();
-        for (Vehicle vehicle : this.vehiclesList) {
-            vehiclesList.add(vehicle);
-        }
-        for (Vehicle vehicle : this.actions.keySet()) {
-            actions.put(vehicle, new ArrayList<>(this.actions.get(vehicle)));
-        }
+    public List<CSP> changingTaskOrder(Vehicle vi) {
 
-        List<CentralizedAction> viActions = actions.get(vi); // reference to the arraylist at vi
+        ArrayList<CSP> cspList = new ArrayList<>();
 
-        CentralizedAction a1 = viActions.get(tIdx1);
-        CentralizedAction a2 = viActions.get(tIdx2);
+        List<CentralizedAction> aL = this.actions.get(vi);
 
-        // check we don't invert pickup/delivery
-        for (int i = tIdx1 + 1; i < tIdx2; i++)
-            if (viActions.get(i).task.equals(a1.task) || viActions.get(i).task.equals(a2.task))
-                return null;
+        for (int i = 0; i < aL.size() - 1; i++) {
 
-        viActions.set(tIdx2, a1);
-        viActions.set(tIdx1, a2);
 
-        // Check weight constraint is kept
-        int weight = 0;
-        for (CentralizedAction action : viActions) {
-            if (action instanceof CentralizedPickupAction) {
-                weight += action.task.weight;
-            } else if (action instanceof CentralizedDeliveryAction) {
-                weight -= action.task.weight;
+            inner:
+            for (int j = i + 1; j < aL.size(); j++) {
+
+
+                CentralizedAction ai = aL.get(i);
+                CentralizedAction aj = aL.get(j);
+
+
+                List<CentralizedAction> aLCopy = new ArrayList<>(aL);
+
+
+                HashMap<Vehicle, List<CentralizedAction>> _actions = new HashMap<>();
+                for (Vehicle vehicle : this.actions.keySet()) {
+                    _actions.put(vehicle, new ArrayList<>(this.actions.get(vehicle)));
+                }
+
+                Collections.swap(aLCopy, i, j);
+
+
+                if (ai.type == Type.PickUp && aLCopy.indexOf(ai.twin) <= j) {
+                    aLCopy.remove(ai.twin);
+                    aLCopy.add(rnd.nextInt(aLCopy.size() - j + 1) + j, ai.twin);
+                }
+
+                if (aj.type == Type.Delivery && aLCopy.indexOf(aj.twin) >= i) {
+                    aLCopy.remove(aj.twin);
+                    aLCopy.add(rnd.nextInt(i + 1), aj.twin);
+                }
+
+
+                double weight = 0;
+                for (CentralizedAction ak : aLCopy) {
+
+                    if (weight > vi.capacity()) {
+                        continue inner;
+                    }
+
+
+                    switch (ak.type) {
+                        case PickUp:
+                            weight += ak.task.weight;
+                            break;
+                        case Delivery:
+                            weight -= ak.task.weight;
+                            break;
+                    }
+                }
+
+
+                _actions.put(vi, aLCopy);
+
+                cspList.add(new CSP(_actions, vehiclesList));
+
             }
 
-            if (weight > vi.capacity()) {
-                return null;
-            }
         }
 
-        return new CSP(actions, vehiclesList);
+
+        return cspList;
+
     }
+
 
     private List<CentralizedAction> removeTask(List<CentralizedAction> actionList, Task t) {
         ArrayList<CentralizedAction> ret = new ArrayList<>();
@@ -181,26 +189,61 @@ public class CSP {
     }
 
 
-    private List<Plan> buildPlans() {
+    private List<Plan> buildPlans(List<Vehicle> vehiclesList) {
 
         ArrayList<Plan> planList = new ArrayList<>();
+
 
         for (Vehicle v : vehiclesList) {
 
             ArrayList<Action> tmp = new ArrayList<>();
 
-            for (CentralizedAction a : actions.get(v)) {
-                tmp.add(a.toLogistAction());
+            List<CentralizedAction> aL = actions.get(v);
+
+            if (aL.size() < 1) {
+                planList.add(new Plan(v.getCurrentCity(), tmp));
+                continue;
             }
 
-            planList.add(new Plan(v.homeCity(), tmp));
+            for (Topology.City c : v.getCurrentCity().pathTo(aL.get(0).getDestinationCity())) {
+                tmp.add(new Action.Move(c));
+            }
+            cost += v.getCurrentCity().distanceTo(aL.get(0).getDestinationCity()) * v.costPerKm();
+
+            for (int i = 0; i < aL.size() - 1; i++) {
+
+                CentralizedAction a1 = aL.get(i);
+                Topology.City c1 = a1.getDestinationCity();
+
+                CentralizedAction a2 = aL.get(i + 1);
+                Topology.City c2 = a2.getDestinationCity();
+
+
+                tmp.add(a1.toLogistAction());
+
+
+                for (Topology.City c : c1.pathTo(c2)) {
+                    tmp.add(new Action.Move(c));
+                }
+                cost += c1.distanceTo(c2) * v.costPerKm();
+
+
+            }
+
+            CentralizedAction ai = aL.get(aL.size() - 1);
+            tmp.add(ai.toLogistAction());
+
+
+            planList.add(new Plan(v.getCurrentCity(), tmp));
         }
 
 
         return planList;
     }
 
-    List<Plan> toPlan() {
+    List<Plan> toPlan(List<Vehicle> v) {
+        if (plans == null)
+            this.plans = buildPlans(v);
         return plans;
     }
 

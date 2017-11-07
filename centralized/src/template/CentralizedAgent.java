@@ -12,17 +12,19 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
+import org.omg.PortableInterceptor.INACTIVE;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @SuppressWarnings("unused")
 public class CentralizedAgent implements CentralizedBehavior {
 
-    private static final int ITERATIONS_MAX = 100000; //max SLS iterations
+    private static final int ITERATIONS_MAX = 5000; //max SLS iterations
     private static final float CHOICE_PROBABILITY = 0.4f; //for localChoice
     private static final float EPSILON = 0.01f; //cost comparison
     private Topology topology;
@@ -30,6 +32,9 @@ public class CentralizedAgent implements CentralizedBehavior {
     private Agent agent;
     private long timeout_setup;
     private long timeout_plan;
+
+    public static final Random rand = new Random(42);
+
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -47,6 +52,8 @@ public class CentralizedAgent implements CentralizedBehavior {
         // the plan method cannot execute more than timeout_plan milliseconds
         timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
 
+        System.out.println("Timeout: "+timeout_plan);
+
         this.topology = topology;
         this.distribution = distribution;
         this.agent = agent;
@@ -59,8 +66,13 @@ public class CentralizedAgent implements CentralizedBehavior {
         ArrayList<CentralizedAction> actionsList = new ArrayList<>();
         HashMap<Vehicle, List<CentralizedAction>> actions = new HashMap<>();
         for (Task t : tasks) {
-            actionsList.add(new CentralizedPickupAction(t));
-            actionsList.add(new CentralizedDeliveryAction(t));
+
+            CentralizedPickupAction tmpP = new CentralizedPickupAction(t);
+            CentralizedDeliveryAction tmpD = new CentralizedDeliveryAction(tmpP, t);
+            tmpP.setTwin(tmpD);
+
+            actionsList.add(tmpP);
+            actionsList.add(tmpD);
         }
         actions.put(vehicleList.get(0), actionsList);
         for (int i = 1; i < vehicleList.size(); i++) {
@@ -73,7 +85,7 @@ public class CentralizedAgent implements CentralizedBehavior {
         List<CSP> neighbours = new ArrayList<>();
         Vehicle vi;
         do {
-            vi = old.vehiclesList.get(new Random().nextInt(old.vehiclesList.size()));
+            vi = old.vehiclesList.get(rand.nextInt(old.vehiclesList.size()));
         } while (old.nextTask(vi) == null);
         CentralizedAction t = old.nextTask(vi);
 
@@ -89,22 +101,8 @@ public class CentralizedAgent implements CentralizedBehavior {
         }
 
         // Change Task Order
-        int i = 0;
-        do {
-            t = old.nextTask(t);
-            i++;
-        } while (t != null);
-
-        if (i > 1) {
-            for (int tIdx1 = 1; tIdx1 < i - 1; tIdx1++) {
-                for (int tIdx2 = tIdx1; tIdx2 < i; tIdx2++) {
-
-                    CSP csp = old.changingTaskOrder(vi, tIdx1, tIdx2);
-                    if (csp != null)
-                        neighbours.add(csp);
-                }
-            }
-        }
+        List<CSP> cspList = old.changingTaskOrder(vi);
+        neighbours.addAll(cspList);
 
         return neighbours;
     }
@@ -112,37 +110,45 @@ public class CentralizedAgent implements CentralizedBehavior {
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         CSP csp = selectInitialSolution(vehicles, tasks);
-        
+
         long start = System.currentTimeMillis();
-        int iterations = ITERATIONS_MAX;
-        
-        do {
+
+        CSP bestCSP = csp;
+
+        for (int i = 0; i < ITERATIONS_MAX && System.currentTimeMillis() - start < 0.95 * timeout_plan; i++) {
             CSP old = csp;
             List<CSP> neighbours = chooseNeighbours(old);
             csp = localChoice(neighbours, old);
-        } while (System.currentTimeMillis() - start > .02*timeout_plan && --iterations > 0);
-                
-        return csp.toPlan();
+
+            if (csp.totalCompanyCost() < bestCSP.totalCompanyCost()) {
+                bestCSP = csp;
+                System.out.println("New minima found: " + bestCSP.totalCompanyCost());
+            }
+
+        }
+
+        System.out.println("Final cost of best solution: " + csp.totalCompanyCost());
+
+
+        return csp.toPlan(vehicles);
     }
 
     private CSP localChoice(List<CSP> neighbours, CSP old) {
         List<CSP> best = new ArrayList<>();
         double bestCost = Double.POSITIVE_INFINITY;
-        
+
         for (CSP csp : neighbours) {
             double cost = csp.totalCompanyCost();
-            if (Math.abs(bestCost-cost) > EPSILON) {
+            if (Math.abs(bestCost - cost) < EPSILON) {
                 best.add(csp);
-            }
-            else if (bestCost > cost) {
+            } else if (bestCost > cost) {
                 bestCost = cost;
                 best.clear();
                 best.add(csp);
             }
         }
-        
-        Random r = new Random();
-        return r.nextFloat() > CHOICE_PROBABILITY ? old : best.get(r.nextInt(best.size()));
+
+        return rand.nextFloat() > CHOICE_PROBABILITY ? old : best.get(rand.nextInt(best.size()));
     }
 
 }
