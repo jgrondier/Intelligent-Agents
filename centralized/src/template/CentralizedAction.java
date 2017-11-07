@@ -3,11 +3,11 @@ package template;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 
-public abstract class Action {
+public abstract class CentralizedAction {
 
     Task task;
 
-    public Action(Task t) {
+    public CentralizedAction(Task t) {
         this.task = t;
     }
 

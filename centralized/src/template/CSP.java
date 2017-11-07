@@ -1,5 +1,6 @@
 package template;
 
+import logist.plan.Action;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -10,22 +11,22 @@ import java.util.List;
 
 public class CSP {
 
-    private HashMap<Vehicle, List<Action>> actions;
+    private HashMap<Vehicle, List<CentralizedAction>> actions;
     List<Vehicle> vehiclesList;
 
-    private HashMap<Action, Vehicle> vehicle = new HashMap<>();
-    private HashMap<Action, Integer> time = new HashMap<>();
+    private HashMap<CentralizedAction, Vehicle> vehicle = new HashMap<>();
+    private HashMap<CentralizedAction, Integer> time = new HashMap<>();
     private List<Plan> plans;
 
-    public CSP(HashMap<Vehicle, List<Action>> actions, List<Vehicle> vehiclesList) {
+    public CSP(HashMap<Vehicle, List<CentralizedAction>> actions, List<Vehicle> vehiclesList) {
 
         this.actions = actions;
         this.vehiclesList = vehiclesList;
 
         for (Vehicle v : vehiclesList) {
-            List<Action> aL = actions.get(v);
+            List<CentralizedAction> aL = actions.get(v);
             for (int i = 0; i < aL.size(); i++) {
-                Action a = aL.get(i);
+                CentralizedAction a = aL.get(i);
                 vehicle.put(a, v);
                 time.put(a, i + 1);
             }
@@ -35,9 +36,9 @@ public class CSP {
 
     }
 
-    Action nextTask(Vehicle v) {
+    CentralizedAction nextTask(Vehicle v) {
 
-        List<Action> aL = actions.get(v);
+        List<CentralizedAction> aL = actions.get(v);
 
         if (aL.isEmpty())
             return null;
@@ -45,11 +46,11 @@ public class CSP {
         return aL.get(0);
     }
 
-    Action nextTask(Action a) {
+    CentralizedAction nextTask(CentralizedAction a) {
 
         Vehicle v = vehicle.get(a);
 
-        List<Action> aL = actions.get(v);
+        List<CentralizedAction> aL = actions.get(v);
 
         int indexOfAction = aL.indexOf(a);
 
@@ -60,27 +61,27 @@ public class CSP {
 
     }
 
-    double dist(Action a1, Action a2) {
+    double dist(CentralizedAction a1, CentralizedAction a2) {
 
         if (a2 == null || a1 == null)
             return 0.0;
 
-        if (a1 instanceof DeliveryAction && a2 instanceof DeliveryAction)
+        if (a1 instanceof CentralizedDeliveryAction && a2 instanceof CentralizedDeliveryAction)
             return a1.task.deliveryCity.distanceTo(a2.task.deliveryCity);
 
-        if (a1 instanceof DeliveryAction && a2 instanceof PickupAction)
+        if (a1 instanceof CentralizedDeliveryAction && a2 instanceof CentralizedPickupAction)
             return a1.task.deliveryCity.distanceTo(a2.task.pickupCity);
 
-        if (a1 instanceof PickupAction && a2 instanceof DeliveryAction)
+        if (a1 instanceof CentralizedPickupAction && a2 instanceof CentralizedDeliveryAction)
             return a1.task.pickupCity.distanceTo(a2.task.deliveryCity);
 
-        if (a1 instanceof PickupAction && a2 instanceof PickupAction)
+        if (a1 instanceof CentralizedPickupAction && a2 instanceof CentralizedPickupAction)
             return a1.task.pickupCity.distanceTo(a2.task.pickupCity);
 
         return Double.MAX_VALUE;
     }
 
-    double dist(Vehicle v, Action a) {
+    double dist(Vehicle v, CentralizedAction a) {
 
         if (a == null)
             return 0.0;
@@ -88,7 +89,7 @@ public class CSP {
         return v.getCurrentCity().distanceTo(a.task.pickupCity);
     }
 
-    double length(Action a) {
+    double length(CentralizedAction a) {
 
         if (a == null)
             return 0.0;
@@ -103,7 +104,7 @@ public class CSP {
 
         for (Vehicle v : vehiclesList) {
             C += (dist(v, nextTask(v)) + length(nextTask(v))) * (double) v.costPerKm();
-            for (Action a : actions.get(v)) {
+            for (CentralizedAction a : actions.get(v)) {
                 C += (dist(a, nextTask(a)) + length(nextTask(a))) * (double) vehicle.get(a).costPerKm();
             }
         }
@@ -111,7 +112,7 @@ public class CSP {
     }
 
     public CSP changingVehicle(Vehicle vi, Vehicle vj) {
-        HashMap<Vehicle, List<Action>> actions = new HashMap<>();
+        HashMap<Vehicle, List<CentralizedAction>> actions = new HashMap<>();
         List<Vehicle> vehiclesList = new ArrayList<>();
         for (Vehicle vehicle : this.vehiclesList) {
             vehiclesList.add(vehicle);
@@ -125,7 +126,7 @@ public class CSP {
     }
 
     public CSP changingTaskOrder(Vehicle vi, int tIdx1, int tIdx2) {
-        HashMap<Vehicle, List<Action>> actions = new HashMap<>();
+        HashMap<Vehicle, List<CentralizedAction>> actions = new HashMap<>();
         List<Vehicle> vehiclesList = new ArrayList<>();
         for (Vehicle vehicle : this.vehiclesList) {
             vehiclesList.add(vehicle);
@@ -134,10 +135,10 @@ public class CSP {
             actions.put(vehicle, new ArrayList<>(this.actions.get(vehicle)));
         }
 
-        List<Action> viActions = actions.get(vi); // reference to the arraylist at vi
+        List<CentralizedAction> viActions = actions.get(vi); // reference to the arraylist at vi
 
-        Action a1 = viActions.get(tIdx1);
-        Action a2 = viActions.get(tIdx2);
+        CentralizedAction a1 = viActions.get(tIdx1);
+        CentralizedAction a2 = viActions.get(tIdx2);
 
         // check we don't invert pickup/delivery
         for (int i = tIdx1 + 1; i < tIdx2; i++)
@@ -149,10 +150,10 @@ public class CSP {
 
         // Check weight constraint is kept
         int weight = 0;
-        for (Action action : viActions) {
-            if (action instanceof PickupAction) {
+        for (CentralizedAction action : viActions) {
+            if (action instanceof CentralizedPickupAction) {
                 weight += action.task.weight;
-            } else if (action instanceof DeliveryAction) {
+            } else if (action instanceof CentralizedDeliveryAction) {
                 weight -= action.task.weight;
             }
 
@@ -164,9 +165,9 @@ public class CSP {
         return new CSP(actions, vehiclesList);
     }
 
-    private List<Action> removeTask(List<Action> actionList, Task t) {
-        ArrayList<Action> ret = new ArrayList<>();
-        for (Action action : actionList) {
+    private List<CentralizedAction> removeTask(List<CentralizedAction> actionList, Task t) {
+        ArrayList<CentralizedAction> ret = new ArrayList<>();
+        for (CentralizedAction action : actionList) {
             if (action.task.equals(t)) {
                 actionList.remove(action);
                 ret.add(action);
@@ -182,9 +183,9 @@ public class CSP {
 
         for (Vehicle v : vehiclesList) {
 
-            ArrayList<logist.plan.Action> tmp = new ArrayList<>();
+            ArrayList<Action> tmp = new ArrayList<>();
 
-            for (Action a : actions.get(v)) {
+            for (CentralizedAction a : actions.get(v)) {
                 tmp.add(a.toLogistAction());
             }
 

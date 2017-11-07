@@ -14,7 +14,6 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -57,15 +56,15 @@ public class CentralizedAgent implements CentralizedBehavior {
     private CSP selectInitialSolution(List<Vehicle> vehicles, TaskSet tasks) {
         List<Vehicle> vehicleList = new ArrayList<>(vehicles);
         vehicleList.sort(Comparator.comparingInt(Vehicle::capacity).reversed());
-        ArrayList<Action> actionsList = new ArrayList<>();
-        HashMap<Vehicle, List<Action>> actions = new HashMap<>();
+        ArrayList<CentralizedAction> actionsList = new ArrayList<>();
+        HashMap<Vehicle, List<CentralizedAction>> actions = new HashMap<>();
         for (Task t : tasks) {
-            actionsList.add(new PickupAction(t));
-            actionsList.add(new DeliveryAction(t));
+            actionsList.add(new CentralizedPickupAction(t));
+            actionsList.add(new CentralizedDeliveryAction(t));
         }
         actions.put(vehicleList.get(0), actionsList);
         for (int i = 1; i < vehicleList.size(); i++) {
-            actions.put(vehicleList.get(i), new ArrayList<Action>());
+            actions.put(vehicleList.get(i), new ArrayList<CentralizedAction>());
         }
         return new CSP(actions, vehicleList);
     }
@@ -76,7 +75,7 @@ public class CentralizedAgent implements CentralizedBehavior {
         do {
             vi = old.vehiclesList.get(new Random().nextInt(old.vehiclesList.size()));
         } while (old.nextTask(vi) != null);
-        Action t = old.nextTask(vi);
+        CentralizedAction t = old.nextTask(vi);
 
         // Change Vehicle
         for (Vehicle vj : old.vehiclesList) {

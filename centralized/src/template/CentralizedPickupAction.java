@@ -3,10 +3,10 @@ package template;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 
-public class PickupAction extends Action {
+public class CentralizedPickupAction extends CentralizedAction {
 
 
-    public PickupAction(Task t) {
+    public CentralizedPickupAction(Task t) {
         super(t);
     }
 
