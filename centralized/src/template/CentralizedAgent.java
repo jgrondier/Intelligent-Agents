@@ -74,14 +74,16 @@ public class CentralizedAgent implements CentralizedBehavior {
         Vehicle vi;
         do {
             vi = old.vehiclesList.get(new Random().nextInt(old.vehiclesList.size()));
-        } while (old.nextTask(vi) != null);
+        } while (old.nextTask(vi) == null);
         CentralizedAction t = old.nextTask(vi);
+
 
         // Change Vehicle
         for (Vehicle vj : old.vehiclesList) {
             if (vi == vj)
                 continue;
-            if (t.task.weight <= vj.capacity()) {
+
+            if (t.task != null && t.task.weight <= vj.capacity()) {
                 neighbours.add(old.changingVehicle(vi, vj));
             }
         }
@@ -94,8 +96,9 @@ public class CentralizedAgent implements CentralizedBehavior {
         } while (t != null);
 
         if (i > 1) {
-            for (int tIdx1 = 1; tIdx1 < i; tIdx1++) {
-                for (int tIdx2 = tIdx1; tIdx2 <= i; tIdx2++) {
+            for (int tIdx1 = 1; tIdx1 < i - 1; tIdx1++) {
+                for (int tIdx2 = tIdx1; tIdx2 < i; tIdx2++) {
+
                     CSP csp = old.changingTaskOrder(vi, tIdx1, tIdx2);
                     if (csp != null)
                         neighbours.add(csp);

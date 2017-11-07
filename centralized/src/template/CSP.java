@@ -167,12 +167,16 @@ public class CSP {
 
     private List<CentralizedAction> removeTask(List<CentralizedAction> actionList, Task t) {
         ArrayList<CentralizedAction> ret = new ArrayList<>();
-        for (CentralizedAction action : actionList) {
+
+        for (int i = 0; i < actionList.size(); i++) {
+            CentralizedAction action = actionList.get(i);
             if (action.task.equals(t)) {
-                actionList.remove(action);
                 ret.add(action);
             }
         }
+
+        actionList.removeAll(ret);
+
         return ret;
     }
 
