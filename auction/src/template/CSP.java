@@ -7,7 +7,6 @@ import logist.task.Task;
 import logist.topology.Topology;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class CSP {
 
