@@ -2,6 +2,7 @@ package template;
 
 //the list of imports
 
+import logist.LogistPlatform;
 import logist.LogistSettings;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
@@ -49,10 +50,7 @@ public class CentralizedAgent implements CentralizedBehavior, AuctionBehavior {
             System.out.println("There was a problem loading the configuration file.");
         }
 
-        // the setup method cannot last more than timeout_setup milliseconds
-        timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
-        // the plan method cannot execute more than timeout_plan milliseconds
-        timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
+        timeout_plan = Math.min(LogistPlatform.getSettings().get(LogistSettings.TimeoutKey.BID), LogistPlatform.getSettings().get(LogistSettings.TimeoutKey.PLAN));
 
         System.out.println("Timeout: "+timeout_plan);
 
@@ -70,6 +68,7 @@ public class CentralizedAgent implements CentralizedBehavior, AuctionBehavior {
         for (int i = 0; i < plans.size(); i++) {
             winCost += plans.get(i).totalDistanceUnits() * agent.vehicles().get(i).costPerKm();
         }
+        System.out.println("New Task would cost us " + (winCost - currentCost));
         return Math.min(0, winCost - currentCost) + 1;
     }
 
@@ -78,6 +77,7 @@ public class CentralizedAgent implements CentralizedBehavior, AuctionBehavior {
         if (lastWinner == this.agent.id()) {
             wonTasks.add(lastTask);
             currentCost = winCost;
+            System.out.println("New task won, new cost is "+currentCost);
             //TODO: something because we won
         } else {
             //TODO: something because we lost
@@ -101,7 +101,7 @@ public class CentralizedAgent implements CentralizedBehavior, AuctionBehavior {
         }
         actions.put(vehicleList.get(0), actionsList);
         for (int i = 1; i < vehicleList.size(); i++) {
-            actions.put(vehicleList.get(i), new ArrayList<CentralizedAction>());
+            actions.put(vehicleList.get(i), new ArrayList<>());
         }
         return new CSP(actions, vehicleList);
     }
