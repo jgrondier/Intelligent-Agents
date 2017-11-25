@@ -14,20 +14,16 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @SuppressWarnings("unused")
-public class CentralizedAgent implements CentralizedBehavior, AuctionBehavior {
+public class CentralizedAgent implements AuctionBehavior {
 
     private static final int ITERATIONS_MAX = 5000; //max SLS iterations
     private static final float CHOICE_PROBABILITY = 0.4f; //for localChoice
     private static final float EPSILON = 0.01f; //cost comparison
     private Topology topology;
-    private TaskSet wonTasks;
+    private List<Task> wonTasks;
     private Agent agent;
 
     private long currentCost = 0;
@@ -56,6 +52,8 @@ public class CentralizedAgent implements CentralizedBehavior, AuctionBehavior {
 
         System.out.println("Timeout: "+timeout_plan);
 
+        wonTasks = new ArrayList<>();
+
         this.topology = topology;
         this.agent = agent;
 
@@ -63,9 +61,14 @@ public class CentralizedAgent implements CentralizedBehavior, AuctionBehavior {
 
     @Override
     public Long askPrice(Task task) {
-        TaskSet tasks = wonTasks.clone();
+
+        System.out.println("Asking price");
+
+        List<Task> tasks = new ArrayList<>(wonTasks);
         tasks.add(task);
-        List<Plan> plans = plan(agent.vehicles(), tasks);
+        Task[] universe = new Task[tasks.size()];
+        universe = tasks.toArray(universe);
+        List<Plan> plans = plan(agent.vehicles(), TaskSet.create(universe));
         winCost = 0;
         for (int i = 0; i < plans.size(); i++) {
             winCost += plans.get(i).totalDistanceUnits() * agent.vehicles().get(i).costPerKm();
@@ -78,6 +81,7 @@ public class CentralizedAgent implements CentralizedBehavior, AuctionBehavior {
         if (lastWinner == this.agent.id()) {
             wonTasks.add(lastTask);
             currentCost = winCost;
+            System.out.println("");
             //TODO: something because we won
         } else {
             //TODO: something because we lost
