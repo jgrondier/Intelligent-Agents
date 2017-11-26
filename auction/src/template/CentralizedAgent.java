@@ -6,7 +6,6 @@ import logist.LogistPlatform;
 import logist.LogistSettings;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
-import logist.behavior.CentralizedBehavior;
 import logist.config.Parsers;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
@@ -20,17 +19,19 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class CentralizedAgent implements AuctionBehavior {
 
-    private static final int ITERATIONS_MAX = 5000; //max SLS iterations
+    private static final int ITERATIONS_MAX = 50000; //max SLS iterations
     private static final float CHOICE_PROBABILITY = 0.4f; //for localChoice
     private static final float EPSILON = 0.01f; //cost comparison
-    private Topology topology;
-    private List<Task> wonTasks;
+    private Set<Task> wonTasks;
     private Agent agent;
+    private List<Plan> currentPlans;
+    private List<Plan> winPlans;
 
     private long currentCost = 0;
     private long winCost = 0;
     private long timeout_setup;
     private long timeout_plan;
+    private long timeout_bid;
 
     public static final Random rand = new Random(42);
 
@@ -38,41 +39,38 @@ public class CentralizedAgent implements AuctionBehavior {
     @Override
     public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
-        // this code is used to get the timeouts
-        LogistSettings ls = null;
-        try {
-            ls = Parsers.parseSettings("config/settings_auction.xml");
-        } catch (Exception exc) {
-            System.out.println("There was a problem loading the configuration file.");
-        }
+        timeout_plan = LogistPlatform.getSettings().get(LogistSettings.TimeoutKey.PLAN);
+        timeout_bid = LogistPlatform.getSettings().get(LogistSettings.TimeoutKey.BID);
 
-        timeout_plan = Math.min(LogistPlatform.getSettings().get(LogistSettings.TimeoutKey.BID), LogistPlatform.getSettings().get(LogistSettings.TimeoutKey.PLAN));
+        System.out.println("Timeout for plan phase: " + timeout_plan);
+        System.out.println("Timeout for bid phase: " + timeout_bid);
 
-        System.out.println("Timeout: "+timeout_plan);
+        wonTasks = new HashSet<>();
+        currentPlans = new ArrayList<>();
+        winPlans = new ArrayList<>();
 
-        wonTasks = new ArrayList<>();
-
-        this.topology = topology;
         this.agent = agent;
 
     }
 
     @Override
     public Long askPrice(Task task) {
-
-        System.out.println("Asking price");
-
-        List<Task> tasks = new ArrayList<>(wonTasks);
+        Set<Task> tasks = new HashSet<>(wonTasks);
         tasks.add(task);
-        Task[] universe = new Task[tasks.size()];
-        universe = tasks.toArray(universe);
-        List<Plan> plans = plan(agent.vehicles(), TaskSet.create(universe));
-        winCost = 0;
-        for (int i = 0; i < plans.size(); i++) {
-            winCost += plans.get(i).totalDistanceUnits() * agent.vehicles().get(i).costPerKm();
-        }
+        winPlans = planAsSet(agent.vehicles(), tasks, timeout_bid);
+
+        winCost = getPlanCost(winPlans);
         System.out.println("New Task would cost us " + (winCost - currentCost));
-        return Math.min(0, winCost - currentCost) + 1;
+
+        return Math.max(0, winCost - currentCost) + 1;
+    }
+
+    private long getPlanCost(List<Plan> plans) {
+        long winCost = 0;
+        for (int i = 0; i < plans.size(); i++) {
+            winCost += plans.get(i).totalDistance() * agent.vehicles().get(i).costPerKm();
+        }
+        return winCost;
     }
 
     @Override
@@ -80,15 +78,12 @@ public class CentralizedAgent implements AuctionBehavior {
         if (lastWinner == this.agent.id()) {
             wonTasks.add(lastTask);
             currentCost = winCost;
-            System.out.println("New task won, new cost is "+currentCost);
-            //TODO: something because we won
-        } else {
-            //TODO: something because we lost
+            currentPlans = new ArrayList<>(winPlans);
+            System.out.println("New task won, new cost is " + currentCost);
         }
-
     }
 
-    private CSP selectInitialSolution(List<Vehicle> vehicles, TaskSet tasks) {
+    private CSP selectInitialSolution(List<Vehicle> vehicles, Set<Task> tasks) {
         List<Vehicle> vehicleList = new ArrayList<>(vehicles);
         vehicleList.sort(Comparator.comparingInt(Vehicle::capacity).reversed());
         ArrayList<CentralizedAction> actionsList = new ArrayList<>();
@@ -137,13 +132,26 @@ public class CentralizedAgent implements AuctionBehavior {
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
+        List<Plan> plannedPlans = planAsSet(vehicles, tasks, timeout_plan);
+        if (!compareSet(tasks, wonTasks) || currentCost > getPlanCost(plannedPlans))
+            return plannedPlans;
+        return currentPlans;
+    }
+
+    private <A> boolean compareSet(Set<A> a, Set<A> b) {
+        if (a.size() != b.size()) //not needed, but faster if a is larger than b
+            return false;
+        return a.containsAll(b) && b.containsAll(a);
+    }
+
+    public List<Plan> planAsSet(List<Vehicle> vehicles, Set<Task> tasks, long timeout) {
         CSP csp = selectInitialSolution(vehicles, tasks);
 
         long start = System.currentTimeMillis();
 
         CSP bestCSP = csp;
 
-        for (int i = 0; i < ITERATIONS_MAX && System.currentTimeMillis() - start < 0.95 * timeout_plan; i++) {
+        for (int i = 0; i < ITERATIONS_MAX && System.currentTimeMillis() - start < 0.95 * timeout; i++) {
             CSP old = csp;
             List<CSP> neighbours = chooseNeighbours(old);
             csp = localChoice(neighbours, old);
