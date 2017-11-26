@@ -57,22 +57,15 @@ public class CentralizedAgent implements AuctionBehavior {
     public Long askPrice(Task task) {
         Set<Task> tasks = new HashSet<>(wonTasks);
         tasks.add(task);
-        winPlans = planAsSet(agent.vehicles(), tasks, timeout_bid);
+        CSP tmp = planAsSet(agent.vehicles(), tasks, timeout_bid);
+        winPlans = tmp.toPlan(agent.vehicles());
 
-        winCost = getPlanCost(winPlans);
+        winCost = (long) tmp.totalCompanyCost();
         System.out.println("New Task would cost us " + (winCost - currentCost));
 
         return Math.max(0, winCost - currentCost) + 1;
     }
-
-    private long getPlanCost(List<Plan> plans) {
-        long winCost = 0;
-        for (int i = 0; i < plans.size(); i++) {
-            winCost += plans.get(i).totalDistance() * agent.vehicles().get(i).costPerKm();
-        }
-        return winCost;
-    }
-
+    
     @Override
     public void auctionResult(Task lastTask, int lastWinner, Long[] lastOffers) {
         if (lastWinner == this.agent.id()) {
@@ -132,8 +125,9 @@ public class CentralizedAgent implements AuctionBehavior {
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-        List<Plan> plannedPlans = planAsSet(vehicles, tasks, timeout_plan);
-        if (!compareSet(tasks, wonTasks) || currentCost > getPlanCost(plannedPlans))
+        CSP tmp = planAsSet(vehicles, tasks, timeout_plan);
+        List<Plan> plannedPlans = tmp.toPlan(vehicles);
+        if (!compareSet(tasks, wonTasks) || currentCost > tmp.totalCompanyCost())
             return plannedPlans;
         return currentPlans;
     }
@@ -144,7 +138,7 @@ public class CentralizedAgent implements AuctionBehavior {
         return a.containsAll(b) && b.containsAll(a);
     }
 
-    public List<Plan> planAsSet(List<Vehicle> vehicles, Set<Task> tasks, long timeout) {
+    public CSP planAsSet(List<Vehicle> vehicles, Set<Task> tasks, long timeout) {
         CSP csp = selectInitialSolution(vehicles, tasks);
 
         long start = System.currentTimeMillis();
@@ -163,10 +157,10 @@ public class CentralizedAgent implements AuctionBehavior {
 
         }
 
-        System.out.println("Final cost of best solution: " + csp.totalCompanyCost());
+        System.out.println("Final cost of best solution: " + bestCSP.totalCompanyCost());
 
 
-        return csp.toPlan(vehicles);
+        return bestCSP;
     }
 
     private CSP localChoice(List<CSP> neighbours, CSP old) {
