@@ -10,7 +10,7 @@ import java.util.*;
 
 public class CSP {
 
-    final private HashMap<Vehicle, List<CentralizedAction>> actions;
+    final HashMap<Vehicle, List<CentralizedAction>> actions;
     final List<Vehicle> vehiclesList;
 
     private final static Random rnd = CentralizedAgent.rand;
