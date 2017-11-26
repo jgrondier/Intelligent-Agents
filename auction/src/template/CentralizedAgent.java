@@ -33,6 +33,9 @@ public class CentralizedAgent implements AuctionBehavior {
     private long timeout_plan;
     private long timeout_bid;
 
+    private static final float MARGIN_INCREASE = .02f;
+    private float profitMargin = 0f;
+
     public static final Random rand = new Random(42);
 
     @Override
@@ -63,9 +66,10 @@ public class CentralizedAgent implements AuctionBehavior {
         CSP tmp = planAsSet(agent.vehicles(), tasks, timeout_bid);
         winPlans = tmp.toPlan(agent.vehicles());
         winCost = (long) tmp.totalCompanyCost();
-        utils.print("New Task would cost us " + (winCost - currentCost));
+        long bid = (long) Math.max(0f, (winCost - currentCost) * (1 + profitMargin)) + 1;
+        utils.print("New Task would cost us " + (winCost - currentCost)+"\n Placing bid for "+bid);
 
-        return Math.max(1, winCost - currentCost) + 1;
+        return bid;
     }
 
     @Override
@@ -74,9 +78,11 @@ public class CentralizedAgent implements AuctionBehavior {
             wonTasks.add(lastTask);
             currentCost = winCost;
             currentPlans = new ArrayList<>(winPlans);
-            utils.print("Bid for task " + lastTask.id + " won, new cost is " + currentCost);
+            profitMargin += MARGIN_INCREASE;
+            utils.print("Bid for task " + lastTask.id + " won, new cost is " + currentCost + "\nIncreasing target profit margin to " + profitMargin);
         } else {
-            utils.print("Didn't win bid for task " + lastTask.id);
+            profitMargin /= 2f;
+            utils.print("Didn't win bid for task " + lastTask.id + "\nDecreasing target profit margin to " + profitMargin);
         }
     }
 
