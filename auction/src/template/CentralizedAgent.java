@@ -24,8 +24,8 @@ public class CentralizedAgent implements AuctionBehavior {
     private static final float EPSILON = 0.01f; //cost comparison
     private Set<Task> wonTasks;
     private Agent agent;
-    private List<Plan> currentPlans;
-    private List<Plan> winPlans;
+    private CSP currentPlans;
+    private CSP winPlans;
 
     private long currentCost = 0;
     private long winCost = 0;
@@ -46,8 +46,6 @@ public class CentralizedAgent implements AuctionBehavior {
         System.out.println("Timeout for bid phase: " + timeout_bid);
 
         wonTasks = new HashSet<>();
-        currentPlans = new ArrayList<>();
-        winPlans = new ArrayList<>();
 
         this.agent = agent;
 
@@ -57,10 +55,9 @@ public class CentralizedAgent implements AuctionBehavior {
     public Long askPrice(Task task) {
         Set<Task> tasks = new HashSet<>(wonTasks);
         tasks.add(task);
-        CSP tmp = planAsSet(agent.vehicles(), tasks, timeout_bid);
-        winPlans = tmp.toPlan(agent.vehicles());
+        winPlans = planAsSet(agent.vehicles(), tasks, timeout_bid);
 
-        winCost = (long) tmp.totalCompanyCost();
+        winCost = (long) winPlans.totalCompanyCost();
         System.out.println("New Task would cost us " + (winCost - currentCost));
 
         return Math.max(0, winCost - currentCost) + 1;
@@ -71,7 +68,7 @@ public class CentralizedAgent implements AuctionBehavior {
         if (lastWinner == this.agent.id()) {
             wonTasks.add(lastTask);
             currentCost = winCost;
-            currentPlans = new ArrayList<>(winPlans);
+            currentPlans = new CSP(winPlans.actions, winPlans.vehiclesList);
             System.out.println("New task won, new cost is " + currentCost);
         }
     }
@@ -126,10 +123,7 @@ public class CentralizedAgent implements AuctionBehavior {
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         CSP tmp = planAsSet(vehicles, tasks, timeout_plan);
-        List<Plan> plannedPlans = tmp.toPlan(vehicles);
-        if (!compareSet(tasks, wonTasks) || currentCost > tmp.totalCompanyCost())
-            return plannedPlans;
-        return currentPlans;
+        return tmp.toPlan(vehicles);
     }
 
     private <A> boolean compareSet(Set<A> a, Set<A> b) {
