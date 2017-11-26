@@ -75,6 +75,10 @@ public class CSP {
     public CSP changingVehicle(Vehicle vi, Vehicle vj) {
 
 
+        if (vi.id() == vj.id()) {
+            return this;
+        }
+
         HashMap<Vehicle, List<CentralizedAction>> actions = new HashMap<>();
         List<Vehicle> vehiclesList = new ArrayList<>(this.vehiclesList);
 
@@ -83,14 +87,21 @@ public class CSP {
             actions.put(vehicle, new ArrayList<>(this.actions.get(vehicle)));
         }
 
+        if (actions.get(vi).size() == 0) {
+            return this;
+        }
+        CentralizedAction t = actions.get(vi).get(CentralizedAgent.rand.nextInt(actions.get(vi).size()));
 
-        Task t = actions.get(vi).get(0).task;
+        if (vj.capacity() >= t.task.weight) {
 
-        if (vj.capacity() >= t.weight) {
+            List<CentralizedAction> ret = removeTask(actions.get(vi), t);
 
-            List ret = removeTask(actions.get(vi), t);
 
-            actions.get(vj).addAll(0, ret);
+            if (actions.get(vj).size() == 0) {
+                actions.get(vj).addAll(0, ret);
+            } else {
+                actions.get(vj).addAll(CentralizedAgent.rand.nextInt(actions.get(vj).size()), ret);
+            }
 
             actions.get(vi).removeAll(ret);
             return new CSP(actions, vehiclesList);
@@ -172,14 +183,16 @@ public class CSP {
     }
 
 
-    private List<CentralizedAction> removeTask(List<CentralizedAction> actionList, Task t) {
+    private List<CentralizedAction> removeTask(List<CentralizedAction> actionList, CentralizedAction t) {
         ArrayList<CentralizedAction> ret = new ArrayList<>();
 
-        for (int i = 0; i < actionList.size(); i++) {
-            CentralizedAction action = actionList.get(i);
-            if (action.task.equals(t)) {
-                ret.add(action);
-            }
+
+        if (t.type == Type.PickUp) {
+            ret.add(t);
+            ret.add(t.twin);
+        } else {
+            ret.add(t.twin);
+            ret.add(t);
         }
 
         actionList.removeAll(ret);
