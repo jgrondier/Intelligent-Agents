@@ -1,0 +1,892 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+
+
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{float}
+% add other packages here
+
+% put your group number and names in the author field
+\title{\bf Exercise 2: A Reactive Agent for the Pickup and Delivery Problem}
+\author{Group \textnumero 25: Goullet, Grondier	}
+
+% the report should not be longer than 3 pages
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children false
+\language english
+\language_package none
+\inputencoding auto
+\fontencoding default
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize 11
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 0
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+maketitle
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Problem Representation
+\end_layout
+
+\begin_layout Subsection
+Representation Description
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% describe how you design the state representation, the possible actions,
+ the reward table and the probability transition table
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A state is represented by our class RLState: it has an obligatory attribute
+ describing the current city and two other optional describing if it has
+ a pickup task and the destination of the pickup task.
+ There are 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$N(N+1)$
+\end_layout
+
+\end_inset
+
+ possible states.
+\end_layout
+
+\begin_layout Standard
+The possible actions is a mapping from each state to each possible RLAction
+ originating from the current city.
+ There are 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$2N$
+\end_layout
+
+\end_inset
+
+ actions originating from each city.
+\end_layout
+
+\begin_layout Standard
+A reward is associated to each action as each action always has the same
+ reward.
+ We get the reward for deliveries from Task Distribution, and deduce the
+ cost of traveling by knowing the distance between cities and the cost per
+ kilometer of moving.
+\end_layout
+
+\begin_layout Standard
+The probability transition table is generated using the probability of a
+ pickup going for each city appearing at the destination city.
+ 
+\end_layout
+
+\begin_layout Subsection
+Implementation Details
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% describe the implementation details of the representations above and the
+ implementation details of the reinforcement learning algorithm you implemented
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+RLState
+\end_layout
+
+\begin_layout Standard
+RLState is our class representing a state.
+ A state has a mandatory 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$currentCity$
+\end_layout
+
+\end_inset
+
+ attribute.
+ It also has a boolean attribute 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$hasTask$
+\end_layout
+
+\end_inset
+
+ to describe if the city has a task ready to be picked up, and am associated
+ destination city for the task 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$destinationCity$
+\end_layout
+
+\end_inset
+
+ .
+ When building our list of possible states, we ignore impossible actions,
+ such as a task with destination the source city.
+\end_layout
+
+\begin_layout Subsubsection
+RLAction
+\end_layout
+
+\begin_layout Standard
+RLAction is our super-class representing an action.
+ An action can be a move (RLMove) or a pickup (RLPickup).
+ We build an action list corresponding to each state.
+ Again, we ignore impossible actions or actions refused by logist, such
+ as moving to a non-neighbouring city, the origin city, or delivering to
+ the origin city.
+\end_layout
+
+\begin_layout Subsubsection
+The Reward Table
+\end_layout
+
+\begin_layout Standard
+The reward table is a Map of the following form: 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$RLState 
+\backslash
+mapsto List(RLAction, Reward)$
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+While iterating on our list of RLState, we create all RLAction possible
+ from this state, then we associate with it the reward.
+ We substract from the pickup reward the travel cost (
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$costPerKm*distance$
+\end_layout
+
+\end_inset
+
+), and simple moves are just a net loss of the travel cost.
+\end_layout
+
+\begin_layout Subsubsection
+The Probability Transition Table
+\end_layout
+
+\begin_layout Standard
+The probability transition table does not need to be built before applying
+ the algorithm: we can just deduce it from the probability table given by
+ the Task Distribution in the setup.
+\end_layout
+
+\begin_layout Section
+Results
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% in this section, you describe several results from the experiments with
+ your reactive agent
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Experiment 1: Discount factor
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% the purpose of this experiment is to understand how the discount factor
+ influences the result
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Setting
+\end_layout
+
+\begin_layout Standard
+All figures have seed 42 and using the settings reactive.xml, but we tested
+ with other seeds.
+ We tested with the following discount values: 0, 0.5, 0.85, and 0.99.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{figure}[H]
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+centering
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+begin{minipage}[b]{0.4
+\backslash
+columnwidth}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+includegraphics[width=
+\backslash
+textwidth]{discount000.png}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+caption{Discount = 0 
+\backslash
+vspace{100px}}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+end{minipage}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hfill
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+begin{minipage}[b]{0.4
+\backslash
+columnwidth}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+includegraphics[width=
+\backslash
+textwidth]{discount050.png}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+caption{Discount = 0.5 }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+end{minipage}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{figure} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{figure}[H]
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+begin{minipage}[b]{0.4
+\backslash
+columnwidth}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+includegraphics[width=
+\backslash
+textwidth]{discount085.png}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+caption{Discount = 0.85}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+end{minipage}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hfill
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+begin{minipage}[b]{0.4
+\backslash
+columnwidth}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+includegraphics[width=
+\backslash
+textwidth]{discount099.png}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+caption{Discount = 0.99 }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+end{minipage}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{figure}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% you describe how you perform the experiment (you also need to specify
+ the configuration used for the experiment)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Observations
+\end_layout
+
+\begin_layout Standard
+We observe as the Discount factor gets closer to 1, we usually get better
+ results.
+ This is because when the discount factor gets closer to 1, the number of
+ iterations to calculate the most optimal decision gets larger, and thus
+ they are more precise.
+ We also notice that there is a diminishing return after a certain point,
+ since we have reached the 
+\begin_inset Quotes eld
+\end_inset
+
+good enough
+\begin_inset Quotes erd
+\end_inset
+
+ decision (In our example, 0.85 and 0.99).
+ We have tested with 0.999, and it takes roughly 10 times longer (14000 iteration
+s vs 1000) to get only slightly better results.
+\end_layout
+
+\begin_layout Subsection
+Experiment 2: Comparisons with dummy agents
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+% you compare the results of your agent with two dummy agents: the random
+ agent that was already given in the starter files and another dummy agent
+ that you define and create.
+ You should report the results from the simulations using the topologies
+ given in the starter files and optionally, additional topologies that you
+ create.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Setting
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{figure}[H]
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+centering
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+begin{minipage}[b]{0.4
+\backslash
+columnwidth}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+includegraphics[width=
+\backslash
+textwidth]{ddiscount085.png}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+caption{Seed = 42.
+ Discount = 0.85.
+ RLAgent is Vehicle 1, Dummy agent is Vehicle 2}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+end{minipage}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hfill
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{figure} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Observations
+\end_layout
+
+\begin_layout Standard
+As we can see, our agent performs significantly better than a totally random
+ agent.
+ We also notice that the graphs for the Reactive agent isn't the same as
+ previously because the addition of another agent alters the task distribution.
+ However in the end, our agent still converges toward the same values.
+\end_layout
+
+\begin_layout Subsection
+Experiment 3: Three of our agents
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% other experiments you would like to present
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Setting
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{figure}[H]
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+centering
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+begin{minipage}[b]{0.4
+\backslash
+columnwidth}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+includegraphics[width=
+\backslash
+textwidth]{3agents.png}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+caption{Seed = 42.
+ Discount = 0.85}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+end{minipage}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hfill
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{figure} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Observations
+\end_layout
+
+\begin_layout Standard
+Even though each of the agents has different results at the begin, they
+ all end up converging toward the same value as found before.
+\end_layout
+
+\begin_layout Subsection
+Experiment 3: Netherlands
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% other experiments you would like to present
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Setting
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{figure}[H]
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+centering
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+begin{minipage}[b]{0.4
+\backslash
+columnwidth}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+includegraphics[width=
+\backslash
+textwidth]{netherlands.png}
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\backslash
+caption{Seed = 42.
+ Discount = 0.85.
+ All are RLA agents but vehicle 4.}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+end{minipage}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hfill
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{figure} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Observations
+\end_layout
+
+\begin_layout Standard
+There is nothing much to say that wasn't found in the previous analysis.
+ We would just like to not that closer cities with better connections lead
+ to better profits, even for a random agent.
+\end_layout
+
+\end_body
+\end_document
